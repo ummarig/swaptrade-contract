@@ -32,6 +32,23 @@ mod trading {
 mod analytics;
 mod migration;
 
+// Dynamic Fee Adjustment System
+mod network_congestion;
+mod dynamic_fee_adjustment;
+mod fee_history;
+mod emergency_override;
+mod fee_adjustment_manager;
+
+#[cfg(test)]
+mod dynamic_fee_adjustment_tests;
+
+// Re-export fee adjustment types
+pub use network_congestion::{CongestionLevel, CongestionTrend, NetworkMetrics, NetworkCongestionMonitor};
+pub use dynamic_fee_adjustment::{FeeAdjustmentConfig, FeeAdjustmentResult, DynamicFeeAdjustment, FeeImpact};
+pub use fee_history::{FeeHistoryEntry, FeeHistoryManager, FeeHistoryStats, AdjustmentReason};
+pub use emergency_override::{EmergencyOverrideManager, EmergencyOverrideState, OverrideStatus, OverrideReason};
+pub use fee_adjustment_manager::FeeAdjustmentManager;
+
 // NFT module
 mod nft_types;
 mod nft_errors;

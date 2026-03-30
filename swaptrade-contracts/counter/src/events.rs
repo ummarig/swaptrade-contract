@@ -223,3 +223,108 @@ pub fn period_returns_calculated(
             (start_timestamp, end_timestamp, time_weighted_return, timestamp),
         );
     }
+
+/// Emitted when network congestion level changes.
+/// Used for monitoring network health.
+///
+/// Topic  : ("NetworkCongestionChanged",)
+/// Payload: (previous_level_tag, new_level_tag, capacity_utilization, timestamp)
+pub fn network_congestion_changed(
+    env: &Env,
+    previous_level: Symbol,
+    new_level: Symbol,
+    capacity_utilization: u32,
+    timestamp: u64,
+) {
+    env.events().publish(
+        (Symbol::new(env, "NetworkCongestionChanged"),),
+        (previous_level, new_level, capacity_utilization, timestamp),
+    );
+}
+
+/// Emitted when trading fees are adjusted due to congestion.
+/// Used for tracking fee changes and their triggers.
+///
+/// Topic  : ("FeeAdjustmentApplied",)
+/// Payload: (previous_fee_bps, new_fee_bps, adjustment_reason_tag, congestion_level_tag, timestamp)
+pub fn fee_adjustment_applied(
+    env: &Env,
+    previous_fee_bps: u32,
+    new_fee_bps: u32,
+    adjustment_reason: Symbol,
+    congestion_level: Symbol,
+    timestamp: u64,
+) {
+    env.events().publish(
+        (Symbol::new(env, "FeeAdjustmentApplied"),),
+        (previous_fee_bps, new_fee_bps, adjustment_reason, congestion_level, timestamp),
+    );
+}
+
+/// Emitted when emergency fee override is activated.
+/// Used for alerting on extreme network conditions.
+///
+/// Topic  : ("EmergencyFeeOverrideActivated",)
+/// Payload: (fee_cap_bps, reason_tag, timestamp)
+pub fn emergency_fee_override_activated(
+    env: &Env,
+    fee_cap_bps: u32,
+    reason: Symbol,
+    timestamp: u64,
+) {
+    env.events().publish(
+        (Symbol::new(env, "EmergencyFeeOverrideActivated"),),
+        (fee_cap_bps, reason, timestamp),
+    );
+}
+
+/// Emitted when emergency fee override is deactivated.
+/// Used for tracking recovery from extreme conditions.
+///
+/// Topic  : ("EmergencyFeeOverrideDeactivated",)
+/// Payload: (timestamp,)
+pub fn emergency_fee_override_deactivated(
+    env: &Env,
+    timestamp: u64,
+) {
+    env.events().publish(
+        (Symbol::new(env, "EmergencyFeeOverrideDeactivated"),),
+        (timestamp,),
+    );
+}
+
+/// Emitted when fee adjustment configuration is updated.
+/// Used for audit trail of configuration changes.
+///
+/// Topic  : ("FeeConfigurationUpdated",)
+/// Payload: (admin_address, config_change_tag, timestamp)
+pub fn fee_configuration_updated(
+    env: &Env,
+    admin: Address,
+    change_type: Symbol,
+    timestamp: u64,
+) {
+    env.events().publish(
+        (Symbol::new(env, "FeeConfigurationUpdated"), admin),
+        (change_type, timestamp),
+    );
+}
+
+/// Emitted periodically with current fee statistics.
+/// Used for analytics and monitoring.
+///
+/// Topic  : ("FeeStatisticsReport",)
+/// Payload: (avg_fee_bps, min_fee_bps, max_fee_bps, volatility, timestamp)
+pub fn fee_statistics_report(
+    env: &Env,
+    avg_fee_bps: u32,
+    min_fee_bps: u32,
+    max_fee_bps: u32,
+    volatility: u32,
+    timestamp: u64,
+) {
+    env.events().publish(
+        (Symbol::new(env, "FeeStatisticsReport"),),
+        (avg_fee_bps, min_fee_bps, max_fee_bps, volatility, timestamp),
+    );
+}
