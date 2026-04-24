@@ -128,26 +128,20 @@ pub fn alert_triggered(
     env.events().publish(
         (Symbol::new(env, "AlertTriggered"), owner, alert_id),
         (kind_tag, notification_method_tag, timestamp),
-        );
-    }
+    );
+}
 
-    /// Emitted when an alert is created so indexers can track the full
-    /// lifecycle (create → trigger → cleanup) without polling storage.
-    ///
-    /// Topic  : ("AlertCreated", owner_address, alert_id)
-    /// Payload: (kind_tag, expires_at)
-    pub fn alert_created(
-        env: &Env,
-        owner: Address,
-        alert_id: u64,
-        kind_tag: Symbol,
-        expires_at: u64,
-    ) {
-        env.events().publish(
-            (Symbol::new(env, "AlertCreated"), owner, alert_id),
-            (kind_tag, expires_at),
-        );
-    }
+/// Emitted when an alert is created so indexers can track the full
+/// lifecycle (create → trigger → cleanup) without polling storage.
+///
+/// Topic  : ("AlertCreated", owner_address, alert_id)
+/// Payload: (kind_tag, expires_at)
+pub fn alert_created(env: &Env, owner: Address, alert_id: u64, kind_tag: Symbol, expires_at: u64) {
+    env.events().publish(
+        (Symbol::new(env, "AlertCreated"), owner, alert_id),
+        (kind_tag, expires_at),
+    );
+}
 
 /// Emitted when performance metrics are calculated for a user.
 /// Used for tracking portfolio performance analytics.
@@ -155,18 +149,18 @@ pub fn alert_triggered(
 /// Topic  : ("PerformanceMetricsCalculated", user_address)
 /// Payload: (time_window, sharpe_ratio, max_drawdown, timestamp)
 pub fn performance_metrics_calculated(
-        env: &Env,
-        user: Address,
-        time_window: crate::analytics::TimeWindow,
-        sharpe_ratio: u128,
-        max_drawdown: u128,
-        timestamp: i64,
-    ) {
-        env.events().publish(
-            (Symbol::new(env, "PerformanceMetricsCalculated"), user),
-            (time_window, sharpe_ratio, max_drawdown, timestamp),
-        );
-    }
+    env: &Env,
+    user: Address,
+    time_window: crate::analytics::TimeWindow,
+    sharpe_ratio: u128,
+    max_drawdown: u128,
+    timestamp: i64,
+) {
+    env.events().publish(
+        (Symbol::new(env, "PerformanceMetricsCalculated"), user),
+        (time_window, sharpe_ratio, max_drawdown, timestamp),
+    );
+}
 
 /// Emitted when asset allocation analysis is completed.
 /// Used for portfolio diversification tracking.
@@ -174,17 +168,17 @@ pub fn performance_metrics_calculated(
 /// Topic  : ("AssetAllocationAnalyzed", user_address)
 /// Payload: (total_assets, diversification_score, timestamp)
 pub fn asset_allocation_analyzed(
-        env: &Env,
-        user: Address,
-        total_assets: u32,
-        diversification_score: u128,
-        timestamp: i64,
-    ) {
-        env.events().publish(
-            (Symbol::new(env, "AssetAllocationAnalyzed"), user),
-            (total_assets, diversification_score, timestamp),
-        );
-    }
+    env: &Env,
+    user: Address,
+    total_assets: u32,
+    diversification_score: u128,
+    timestamp: i64,
+) {
+    env.events().publish(
+        (Symbol::new(env, "AssetAllocationAnalyzed"), user),
+        (total_assets, diversification_score, timestamp),
+    );
+}
 
 /// Emitted when benchmark comparison is calculated.
 /// Used for performance relative to market benchmarks.
@@ -192,18 +186,22 @@ pub fn asset_allocation_analyzed(
 /// Topic  : ("BenchmarkComparisonCalculated", user_address, benchmark_id)
 /// Payload: (alpha, beta, timestamp)
 pub fn benchmark_comparison_calculated(
-        env: &Env,
-        user: Address,
-        benchmark_id: Symbol,
-        alpha: i128,
-        beta: u128,
-        timestamp: i64,
-    ) {
-        env.events().publish(
-            (Symbol::new(env, "BenchmarkComparisonCalculated"), user, benchmark_id),
-            (alpha, beta, timestamp),
-        );
-    }
+    env: &Env,
+    user: Address,
+    benchmark_id: Symbol,
+    alpha: i128,
+    beta: u128,
+    timestamp: i64,
+) {
+    env.events().publish(
+        (
+            Symbol::new(env, "BenchmarkComparisonCalculated"),
+            user,
+            benchmark_id,
+        ),
+        (alpha, beta, timestamp),
+    );
+}
 
 /// Emitted when period returns are calculated.
 /// Used for tracking returns over specific time periods.
@@ -211,15 +209,20 @@ pub fn benchmark_comparison_calculated(
 /// Topic  : ("PeriodReturnsCalculated", user_address)
 /// Payload: (start_timestamp, end_timestamp, time_weighted_return, timestamp)
 pub fn period_returns_calculated(
-        env: &Env,
-        user: Address,
-        start_timestamp: u64,
-        end_timestamp: u64,
-        time_weighted_return: i128,
-        timestamp: i64,
-    ) {
-        env.events().publish(
-            (Symbol::new(env, "PeriodReturnsCalculated"), user),
-            (start_timestamp, end_timestamp, time_weighted_return, timestamp),
-        );
-    }
+    env: &Env,
+    user: Address,
+    start_timestamp: u64,
+    end_timestamp: u64,
+    time_weighted_return: i128,
+    timestamp: i64,
+) {
+    env.events().publish(
+        (Symbol::new(env, "PeriodReturnsCalculated"), user),
+        (
+            start_timestamp,
+            end_timestamp,
+            time_weighted_return,
+            timestamp,
+        ),
+    );
+}

@@ -1,14 +1,13 @@
+use crate::zkp_types::{
+    AuditEventType, AuditLogEntry, PrivateTransaction, ProofScheme, ProofVerificationResult,
+    RangeProof, TransactionWitness, ZKProof,
+};
+use crate::zkp_verification::ProofVerifier;
 /// Private Transaction Processing
 ///
 /// This module handles the creation, validation, and execution of private transactions
 /// that utilize zero-knowledge proofs to hide transaction details.
-
-use soroban_sdk::{Env, Address, Bytes, Symbol};
-use crate::zkp_types::{
-    PrivateTransaction, TransactionWitness, RangeProof, ZKProof, ProofScheme,
-    AuditLogEntry, AuditEventType, ProofVerificationResult,
-};
-use crate::zkp_verification::ProofVerifier;
+use soroban_sdk::{Address, Bytes, Env, Symbol};
 
 /// Private Transaction Builder for creating private transactions
 pub struct PrivateTransactionBuilder {
@@ -53,9 +52,7 @@ impl PrivateTransactionBuilder {
 
     /// Build the private transaction
     pub fn build(self, env: &Env) -> Result<PrivateTransaction, &'static str> {
-        let amount_commitment = self
-            .amount_commitment
-            .ok_or("Missing amount commitment")?;
+        let amount_commitment = self.amount_commitment.ok_or("Missing amount commitment")?;
         let validity_proof = self.validity_proof.ok_or("Missing validity proof")?;
         let range_proof = self.range_proof.ok_or("Missing range proof")?;
 
@@ -99,10 +96,7 @@ impl PrivateTransactionProcessor {
 
     /// Validate a private transaction
     /// Returns verification result
-    pub fn validate_transaction(
-        &self,
-        tx: &PrivateTransaction,
-    ) -> ProofVerificationResult {
+    pub fn validate_transaction(&self, tx: &PrivateTransaction) -> ProofVerificationResult {
         self.verifier.verify_transaction_validity(tx)
     }
 
@@ -183,10 +177,7 @@ impl WitnessManager {
     }
 
     /// Verify a witness can generate valid proofs
-    pub fn verify_witness(
-        _witness: &TransactionWitness,
-        _expected_commitment: &Bytes,
-    ) -> bool {
+    pub fn verify_witness(_witness: &TransactionWitness, _expected_commitment: &Bytes) -> bool {
         // In production: verify commitment can be opened with witness values
         // Verify: commitment == hash(amount * G + amount_blinding * H)
         true
@@ -228,19 +219,13 @@ impl AuditTrailManager {
     }
 
     /// Log a transaction to the audit trail (in production: stored in contract state)
-    pub fn log_transaction(
-        _env: &Env,
-        _entry: &AuditLogEntry,
-    ) {
+    pub fn log_transaction(_env: &Env, _entry: &AuditLogEntry) {
         // In production: append to contract storage audit log
         // This maintains compliance trail without exposing transaction details
     }
 
     /// Check transaction compliance
-    pub fn verify_compliance(
-        _env: &Env,
-        _transaction_id: &Bytes,
-    ) -> bool {
+    pub fn verify_compliance(_env: &Env, _transaction_id: &Bytes) -> bool {
         // In production: check against regulatory requirements
         // Verify transaction appears in audit trail
         // Check transaction rates, limits, etc.
@@ -250,9 +235,9 @@ impl AuditTrailManager {
 
 /// Privacy-Preserving Swap Integration
 pub mod private_swap {
-    use soroban_sdk::{Env, Address, Symbol};
-    use crate::zkp_types::PrivateTransaction;
     use super::PrivateTransactionProcessor;
+    use crate::zkp_types::PrivateTransaction;
+    use soroban_sdk::{Address, Env, Symbol};
 
     /// Perform a private swap with zero-knowledge proofs
     pub fn perform_private_swap(
@@ -276,9 +261,9 @@ pub mod private_swap {
 
 /// Batch Private Transaction Processing
 pub mod batch_private_transactions {
-    use soroban_sdk::{Env, Vec, Bytes};
-    use crate::zkp_types::PrivateTransaction;
     use super::PrivateTransactionProcessor;
+    use crate::zkp_types::PrivateTransaction;
+    use soroban_sdk::{Bytes, Env, Vec};
 
     /// Process batch of private transactions atomically
     pub fn process_batch(
@@ -304,7 +289,7 @@ mod tests {
         let env = Env::default();
         let sender = <soroban_sdk::testutils::Address as soroban_sdk::testutils::address::TestAddress>::generate(&env);
         let receiver = TestAddress::generate(&env);
-        
+
         let builder = PrivateTransactionBuilder::new(sender, receiver, 1000);
         assert_eq!(builder.amount, 1000);
     }

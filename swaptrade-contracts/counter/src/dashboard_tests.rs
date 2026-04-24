@@ -50,13 +50,19 @@ mod dashboard_cache_tests {
 
         let _ = client.get_portfolio(&user);
         let after_swap_stats = client.get_cache_stats();
-        assert!(after_swap_stats.1 > before_stats.1, "swap should force a cache miss");
+        assert!(
+            after_swap_stats.1 > before_stats.1,
+            "swap should force a cache miss"
+        );
 
         // Add liquidity also mutates portfolio and should invalidate cache.
         let _ = client.add_liquidity(&500, &500, &user);
         let _ = client.get_portfolio(&user);
         let after_lp_stats = client.get_cache_stats();
-        assert!(after_lp_stats.1 > after_swap_stats.1, "liquidity update should force a cache miss");
+        assert!(
+            after_lp_stats.1 > after_swap_stats.1,
+            "liquidity update should force a cache miss"
+        );
     }
 
     #[test]

@@ -344,12 +344,12 @@ mod rate_limit_tests {
 
         // Test that cached hourly windows are consistent across multiple calls
         env.ledger().set_timestamp(3600); // Start of hour 1
-        
+
         // Multiple calls should return the same window start
         let status1 = RateLimiter::get_swap_status(&env, &user, &novice);
         let status2 = RateLimiter::get_swap_status(&env, &user, &novice);
         let status3 = RateLimiter::get_swap_status(&env, &user, &novice);
-        
+
         // All should have the same cooldown (same window)
         assert_eq!(status1.cooldown_ms, status2.cooldown_ms);
         assert_eq!(status2.cooldown_ms, status3.cooldown_ms);
@@ -363,12 +363,12 @@ mod rate_limit_tests {
 
         // Test that cached daily windows are consistent across multiple calls
         env.ledger().set_timestamp(86400); // Start of day 1
-        
+
         // Multiple calls should return the same window start
         let status1 = RateLimiter::get_lp_status(&env, &user, &novice);
         let status2 = RateLimiter::get_lp_status(&env, &user, &novice);
         let status3 = RateLimiter::get_lp_status(&env, &user, &novice);
-        
+
         // All should have the same cooldown (same window)
         assert_eq!(status1.cooldown_ms, status2.cooldown_ms);
         assert_eq!(status2.cooldown_ms, status3.cooldown_ms);
@@ -383,11 +383,11 @@ mod rate_limit_tests {
         // Start in hour 0
         env.ledger().set_timestamp(3500);
         let status_before = RateLimiter::get_swap_status(&env, &user, &novice);
-        
+
         // Cross to hour 1 - cache should invalidate and recalculate
         env.ledger().set_timestamp(3600);
         let status_after = RateLimiter::get_swap_status(&env, &user, &novice);
-        
+
         // Cooldown should reset to full hour
         assert_eq!(status_after.cooldown_ms, 3600000u64);
         // Should be different from before (different window)
@@ -402,11 +402,11 @@ mod rate_limit_tests {
         // Start near end of day 0
         env.ledger().set_timestamp(86000);
         let status_before = RateLimiter::get_lp_status(&env, &user, &novice);
-        
+
         // Cross to day 1 - cache should invalidate and recalculate
         env.ledger().set_timestamp(86400);
         let status_after = RateLimiter::get_lp_status(&env, &user, &novice);
-        
+
         // Cooldown should reset to full day
         assert_eq!(status_after.cooldown_ms, 86400000u64);
         // Should be different from before (different window)
@@ -420,7 +420,7 @@ mod rate_limit_tests {
 
         // Simulate high-frequency operations in same hour
         env.ledger().set_timestamp(3600); // Start of hour
-        
+
         // Record multiple operations rapidly
         for i in 0..15 {
             env.ledger().set_timestamp(3600 + i);
@@ -428,7 +428,7 @@ mod rate_limit_tests {
             assert!(result.is_ok(), "Swap {} should be allowed", i + 1);
             RateLimiter::record_swap(&env, &user, env.ledger().timestamp());
         }
-        
+
         // Verify status is consistent
         let status = RateLimiter::get_swap_status(&env, &user, &trader);
         assert_eq!(status.used, 15);

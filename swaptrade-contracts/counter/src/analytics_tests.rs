@@ -1,9 +1,9 @@
 #[cfg(test)]
 mod analytics_tests {
     use super::*;
-    use soroban_sdk::{testutils::Address as _, Env, Symbol, symbol_short, Vec};
+    use crate::analytics::{PerformanceMetrics, PortfolioAnalytics, TimeWindow};
     use crate::portfolio::{Asset, Portfolio};
-    use crate::analytics::{PortfolioAnalytics, TimeWindow, PerformanceMetrics};
+    use soroban_sdk::{symbol_short, testutils::Address as _, Env, Symbol, Vec};
 
     #[test]
     fn test_get_performance_metrics_empty_portfolio() {
@@ -11,12 +11,8 @@ mod analytics_tests {
         let portfolio = Portfolio::new(&env);
         let user = Address::generate(&env);
 
-        let metrics = PortfolioAnalytics::get_performance_metrics(
-            &env,
-            &portfolio,
-            user,
-            TimeWindow::Day7,
-        );
+        let metrics =
+            PortfolioAnalytics::get_performance_metrics(&env, &portfolio, user, TimeWindow::Day7);
 
         // Should return zero metrics for empty portfolio
         assert_eq!(metrics.sharpe_ratio, 0);
@@ -35,7 +31,12 @@ mod analytics_tests {
 
         // Mint some assets
         portfolio.mint(&env, Asset::XLM, user.clone(), 1000);
-        portfolio.mint(&env, Asset::Custom(symbol_short!("USDCSIM")), user.clone(), 500);
+        portfolio.mint(
+            &env,
+            Asset::Custom(symbol_short!("USDCSIM")),
+            user.clone(),
+            500,
+        );
 
         let allocation = PortfolioAnalytics::get_asset_allocation(&env, &portfolio, user);
 
@@ -80,10 +81,7 @@ mod analytics_tests {
         let user = Address::generate(&env);
 
         let returns = PortfolioAnalytics::get_period_returns(
-            &env,
-            &portfolio,
-            user,
-            1000000, // start timestamp
+            &env, &portfolio, user, 1000000, // start timestamp
             2000000, // end timestamp
         );
 
@@ -118,9 +116,9 @@ mod analytics_tests {
     fn test_calculate_volatility() {
         let env = Env::default();
         let mut returns = Vec::new(&env);
-        returns.push_back(1_000_000);  // 0.1 in fixed-point
-        returns.push_back(-500_000);  // -0.05 in fixed-point
-        returns.push_back(2_000_000);  // 0.2 in fixed-point
+        returns.push_back(1_000_000); // 0.1 in fixed-point
+        returns.push_back(-500_000); // -0.05 in fixed-point
+        returns.push_back(2_000_000); // 0.2 in fixed-point
 
         let volatility = PortfolioAnalytics::calculate_volatility(&returns);
 
@@ -148,10 +146,10 @@ mod analytics_tests {
     fn test_calculate_win_rate() {
         let env = Env::default();
         let mut returns = Vec::new(&env);
-        returns.push_back(1_000_000);   // win
-        returns.push_back(-500_000);   // loss
-        returns.push_back(2_000_000);   // win
-        returns.push_back(-1_000_000);  // loss
+        returns.push_back(1_000_000); // win
+        returns.push_back(-500_000); // loss
+        returns.push_back(2_000_000); // win
+        returns.push_back(-1_000_000); // loss
 
         let win_rate = PortfolioAnalytics::calculate_win_rate(&returns);
 

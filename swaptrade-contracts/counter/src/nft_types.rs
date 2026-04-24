@@ -1,5 +1,5 @@
 #![cfg_attr(not(test), no_std)]
-use soroban_sdk::{contracttype, Address, Env, Symbol, Vec, Map, String};
+use soroban_sdk::{contracttype, Address, Env, Map, String, Symbol, Vec};
 
 /// NFT Standard Types (ERC-721/ERC-1155 compatible for Soroban)
 #[derive(Clone, Debug, PartialEq)]
@@ -376,7 +376,7 @@ impl NFTPortfolio {
     /// Add an NFT to the portfolio
     pub fn add_nft(&mut self, token_id: u64, collection_id: u64) {
         self.owned_tokens.push_back(token_id);
-        
+
         // Add collection if not already present
         let mut has_collection = false;
         for i in 0..self.collections.len() {
@@ -390,7 +390,7 @@ impl NFTPortfolio {
         if !has_collection {
             self.collections.push_back(collection_id);
         }
-        
+
         self.total_nfts = self.total_nfts.saturating_add(1);
     }
 

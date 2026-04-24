@@ -1,25 +1,24 @@
+use crate::zkp_types::{
+    BalanceProof, Commitment, ProofScheme, RangeProof, TransactionWitness, ZKProof,
+};
 /// Off-Chain Zero-Knowledge Proof Generation
 ///
 /// This module provides utilities for generating zero-knowledge proofs off-chain.
 /// In production, clients would use this to create proofs before submitting transactions.
-
 use soroban_sdk::{Bytes, Env};
-use crate::zkp_types::{
-    RangeProof, TransactionWitness, ZKProof, ProofScheme, Commitment, BalanceProof,
-};
 
 /// Off-chain proof generation for clients
 pub struct ProofGenerator;
 
 impl ProofGenerator {
     /// Generate a range proof for a private amount
-    /// 
+    ///
     /// In production, this would:
     /// 1. Use Bulletproof algorithm
     /// 2. Generate bit commitments for each bit of the amount
     /// 3. Create polynomial commitments
     /// 4. Generate the inner product proof
-    /// 
+    ///
     /// For now, this is a placeholder that clients would implement
     pub fn generate_range_proof(
         amount: i128,
@@ -48,7 +47,7 @@ impl ProofGenerator {
     }
 
     /// Generate a transaction validity proof
-    /// 
+    ///
     /// Proves that a transaction is valid without revealing:
     /// - The exact amounts
     /// - The exact balances
@@ -153,8 +152,8 @@ impl ProofGenerator {
 
 /// Proof serialization utilities
 pub mod serialization {
-    use soroban_sdk::Bytes;
     use crate::zkp_types::ZKProof;
+    use soroban_sdk::Bytes;
 
     /// Serialize a proof to bytes for transmission
     pub fn serialize_proof(_proof: &ZKProof) -> Result<std::vec::Vec<u8>, &'static str> {
@@ -260,7 +259,7 @@ mod tests {
     fn test_proof_builder() {
         let builder = ProofBuilder::new(ProofScheme::Bulletproof);
         assert_eq!(builder.bit_length, 64);
-        
+
         let builder_with_length = builder.with_bit_length(128);
         assert_eq!(builder_with_length.bit_length, 128);
     }

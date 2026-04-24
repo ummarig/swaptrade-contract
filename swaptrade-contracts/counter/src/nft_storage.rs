@@ -1,7 +1,7 @@
 #![cfg_attr(not(test), no_std)]
-use soroban_sdk::{contracttype, Address, Env, Map, Symbol, Vec, symbol_short};
-use crate::nft_types::*;
 use crate::nft_errors::NFTError;
+use crate::nft_types::*;
+use soroban_sdk::{contracttype, symbol_short, Address, Env, Map, Symbol, Vec};
 
 /// Storage keys for NFT data
 pub const NFT_REGISTRY_KEY: Symbol = symbol_short!("nft_reg");
@@ -150,12 +150,15 @@ impl NFTRegistry {
     pub fn store_nft(&mut self, env: &Env, nft: NFT) {
         let key = (nft.collection_id, nft.token_id);
         self.nfts.set(key, nft.clone());
-        
+
         // Update owner index
-        let mut tokens = self.owner_tokens.get(nft.owner.clone()).unwrap_or_else(|| Vec::new(env));
+        let mut tokens = self
+            .owner_tokens
+            .get(nft.owner.clone())
+            .unwrap_or_else(|| Vec::new(env));
         tokens.push_back(key);
         self.owner_tokens.set(nft.owner.clone(), tokens);
-        
+
         self.total_nfts = self.total_nfts.saturating_add(1);
     }
 
@@ -171,19 +174,28 @@ impl NFTRegistry {
     }
 
     /// Transfer NFT ownership
-    pub fn transfer_ownership(&mut self, env: &Env, collection_id: u64, token_id: u64, new_owner: Address) -> Result<(), NFTError> {
+    pub fn transfer_ownership(
+        &mut self,
+        env: &Env,
+        collection_id: u64,
+        token_id: u64,
+        new_owner: Address,
+    ) -> Result<(), NFTError> {
         let key = (collection_id, token_id);
         let mut nft = self.nfts.get(key).ok_or(NFTError::NFTNotFound)?;
-        
+
         let old_owner = nft.owner.clone();
         nft.owner = new_owner.clone();
-        
+
         // Update NFT
         self.nfts.set(key, nft);
-        
+
         // Update owner indices
         // Remove from old owner
-        let mut old_tokens = self.owner_tokens.get(old_owner.clone()).unwrap_or_else(|| Vec::new(env));
+        let mut old_tokens = self
+            .owner_tokens
+            .get(old_owner.clone())
+            .unwrap_or_else(|| Vec::new(env));
         let mut new_old_tokens = Vec::new(env);
         for i in 0..old_tokens.len() {
             if let Some(t) = old_tokens.get(i) {
@@ -193,18 +205,23 @@ impl NFTRegistry {
             }
         }
         self.owner_tokens.set(old_owner, new_old_tokens);
-        
+
         // Add to new owner
-        let mut new_tokens = self.owner_tokens.get(new_owner.clone()).unwrap_or_else(|| Vec::new(env));
+        let mut new_tokens = self
+            .owner_tokens
+            .get(new_owner.clone())
+            .unwrap_or_else(|| Vec::new(env));
         new_tokens.push_back(key);
         self.owner_tokens.set(new_owner, new_tokens);
-        
+
         Ok(())
     }
 
     /// Get all tokens owned by an address
     pub fn get_tokens_by_owner(&self, owner: Address) -> Vec<(u64, u64)> {
-        self.owner_tokens.get(owner).unwrap_or_else(|| Vec::new(&self.nfts.env()))
+        self.owner_tokens
+            .get(owner)
+            .unwrap_or_else(|| Vec::new(&self.nfts.env()))
     }
 }
 
@@ -220,16 +237,24 @@ impl CollectionRegistry {
 
     /// Store a collection
     pub fn store_collection(&mut self, env: &Env, collection: NFTCollection) {
-        self.collections.set(collection.collection_id, collection.clone());
-        
+        self.collections
+            .set(collection.collection_id, collection.clone());
+
         // Update owner index
-        let mut collections = self.owner_collections.get(collection.owner.clone()).unwrap_or_else(|| Vec::new(env));
+        let mut collections = self
+            .owner_collections
+            .get(collection.owner.clone())
+            .unwrap_or_else(|| Vec::new(env));
         collections.push_back(collection.collection_id);
-        self.owner_collections.set(collection.owner.clone(), collections);
-        
+        self.owner_collections
+            .set(collection.owner.clone(), collections);
+
         // Map name to ID
-        self.name_to_id.set(Symbol::new(env, &collection.name.to_string()), collection.collection_id);
-        
+        self.name_to_id.set(
+            Symbol::new(env, &collection.name.to_string()),
+            collection.collection_id,
+        );
+
         self.total_collections = self.total_collections.saturating_add(1);
     }
 
@@ -245,7 +270,9 @@ impl CollectionRegistry {
 
     /// Get collections by owner
     pub fn get_collections_by_owner(&self, owner: Address) -> Vec<u64> {
-        self.owner_collections.get(owner).unwrap_or_else(|| Vec::new(&self.collections.env()))
+        self.owner_collections
+            .get(owner)
+            .unwrap_or_else(|| Vec::new(&self.collections.env()))
     }
 
     /// Check if collection name exists
@@ -269,21 +296,28 @@ impl ListingRegistry {
     pub fn create_listing(&mut self, env: &Env, listing: NFTListing) -> u64 {
         let listing_id = listing.listing_id;
         self.listings.set(listing_id, listing.clone());
-        
+
         // Update token index
         let token_key = (listing.collection_id, listing.token_id);
-        let mut token_listings = self.token_listings.get(token_key).unwrap_or_else(|| Vec::new(env));
+        let mut token_listings = self
+            .token_listings
+            .get(token_key)
+            .unwrap_or_else(|| Vec::new(env));
         token_listings.push_back(listing_id);
         self.token_listings.set(token_key, token_listings);
-        
+
         // Update seller index
-        let mut seller_listings = self.seller_listings.get(listing.seller.clone()).unwrap_or_else(|| Vec::new(env));
+        let mut seller_listings = self
+            .seller_listings
+            .get(listing.seller.clone())
+            .unwrap_or_else(|| Vec::new(env));
         seller_listings.push_back(listing_id);
-        self.seller_listings.set(listing.seller.clone(), seller_listings);
-        
+        self.seller_listings
+            .set(listing.seller.clone(), seller_listings);
+
         self.active_count = self.active_count.saturating_add(1);
         self.total_listings = self.total_listings.saturating_add(1);
-        
+
         listing_id
     }
 
@@ -299,7 +333,10 @@ impl ListingRegistry {
 
     /// Cancel/deactivate a listing
     pub fn deactivate_listing(&mut self, env: &Env, listing_id: u64) -> Result<(), NFTError> {
-        let mut listing = self.listings.get(listing_id).ok_or(NFTError::ListingNotFound)?;
+        let mut listing = self
+            .listings
+            .get(listing_id)
+            .ok_or(NFTError::ListingNotFound)?;
         if !listing.is_active {
             return Err(NFTError::ListingNotActive);
         }
@@ -311,12 +348,16 @@ impl ListingRegistry {
 
     /// Get listings for a token
     pub fn get_token_listings(&self, collection_id: u64, token_id: u64) -> Vec<u64> {
-        self.token_listings.get((collection_id, token_id)).unwrap_or_else(|| Vec::new(&self.listings.env()))
+        self.token_listings
+            .get((collection_id, token_id))
+            .unwrap_or_else(|| Vec::new(&self.listings.env()))
     }
 
     /// Get listings by seller
     pub fn get_seller_listings(&self, seller: Address) -> Vec<u64> {
-        self.seller_listings.get(seller).unwrap_or_else(|| Vec::new(&self.listings.env()))
+        self.seller_listings
+            .get(seller)
+            .unwrap_or_else(|| Vec::new(&self.listings.env()))
     }
 }
 
@@ -335,21 +376,27 @@ impl OfferRegistry {
     pub fn create_offer(&mut self, env: &Env, offer: NFTOffer) -> u64 {
         let offer_id = offer.offer_id;
         self.offers.set(offer_id, offer.clone());
-        
+
         // Update token index
         let token_key = (offer.collection_id, offer.token_id);
-        let mut token_offers = self.token_offers.get(token_key).unwrap_or_else(|| Vec::new(env));
+        let mut token_offers = self
+            .token_offers
+            .get(token_key)
+            .unwrap_or_else(|| Vec::new(env));
         token_offers.push_back(offer_id);
         self.token_offers.set(token_key, token_offers);
-        
+
         // Update buyer index
-        let mut buyer_offers = self.buyer_offers.get(offer.buyer.clone()).unwrap_or_else(|| Vec::new(env));
+        let mut buyer_offers = self
+            .buyer_offers
+            .get(offer.buyer.clone())
+            .unwrap_or_else(|| Vec::new(env));
         buyer_offers.push_back(offer_id);
         self.buyer_offers.set(offer.buyer.clone(), buyer_offers);
-        
+
         self.active_count = self.active_count.saturating_add(1);
         self.total_offers = self.total_offers.saturating_add(1);
-        
+
         offer_id
     }
 
@@ -377,12 +424,16 @@ impl OfferRegistry {
 
     /// Get offers for a token
     pub fn get_token_offers(&self, collection_id: u64, token_id: u64) -> Vec<u64> {
-        self.token_offers.get((collection_id, token_id)).unwrap_or_else(|| Vec::new(&self.offers.env()))
+        self.token_offers
+            .get((collection_id, token_id))
+            .unwrap_or_else(|| Vec::new(&self.offers.env()))
     }
 
     /// Get offers by buyer
     pub fn get_buyer_offers(&self, buyer: Address) -> Vec<u64> {
-        self.buyer_offers.get(buyer).unwrap_or_else(|| Vec::new(&self.offers.env()))
+        self.buyer_offers
+            .get(buyer)
+            .unwrap_or_else(|| Vec::new(&self.offers.env()))
     }
 }
 
@@ -402,24 +453,31 @@ impl LoanRegistry {
     pub fn create_loan(&mut self, env: &Env, loan: NFTLoan) -> u64 {
         let loan_id = loan.loan_id;
         self.loans.set(loan_id, loan.clone());
-        
+
         // Map collateral to loan
         let collateral_key = (loan.collection_id, loan.token_id);
         self.collateral_loans.set(collateral_key, loan_id);
-        
+
         // Update borrower index
-        let mut borrower_loans = self.borrower_loans.get(loan.borrower.clone()).unwrap_or_else(|| Vec::new(env));
+        let mut borrower_loans = self
+            .borrower_loans
+            .get(loan.borrower.clone())
+            .unwrap_or_else(|| Vec::new(env));
         borrower_loans.push_back(loan_id);
-        self.borrower_loans.set(loan.borrower.clone(), borrower_loans);
-        
+        self.borrower_loans
+            .set(loan.borrower.clone(), borrower_loans);
+
         // Update lender index
-        let mut lender_loans = self.lender_loans.get(loan.lender.clone()).unwrap_or_else(|| Vec::new(env));
+        let mut lender_loans = self
+            .lender_loans
+            .get(loan.lender.clone())
+            .unwrap_or_else(|| Vec::new(env));
         lender_loans.push_back(loan_id);
         self.lender_loans.set(loan.lender.clone(), lender_loans);
-        
+
         self.active_count = self.active_count.saturating_add(1);
         self.total_loans = self.total_loans.saturating_add(1);
-        
+
         loan_id
     }
 
@@ -440,12 +498,16 @@ impl LoanRegistry {
 
     /// Get loans by borrower
     pub fn get_borrower_loans(&self, borrower: Address) -> Vec<u64> {
-        self.borrower_loans.get(borrower).unwrap_or_else(|| Vec::new(&self.loans.env()))
+        self.borrower_loans
+            .get(borrower)
+            .unwrap_or_else(|| Vec::new(&self.loans.env()))
     }
 
     /// Get loans by lender
     pub fn get_lender_loans(&self, lender: Address) -> Vec<u64> {
-        self.lender_loans.get(lender).unwrap_or_else(|| Vec::new(&self.loans.env()))
+        self.lender_loans
+            .get(lender)
+            .unwrap_or_else(|| Vec::new(&self.loans.env()))
     }
 
     /// Mark loan as repaid
@@ -494,20 +556,25 @@ impl TradeHistory {
     pub fn record_trade(&mut self, env: &Env, trade: NFTTrade) {
         let trade_index = self.trades.len();
         self.trades.push_back(trade.clone());
-        
+
         // Update token index
         let token_key = (trade.collection_id, trade.token_id);
-        let mut token_trades = self.token_trades.get(token_key).unwrap_or_else(|| Vec::new(env));
+        let mut token_trades = self
+            .token_trades
+            .get(token_key)
+            .unwrap_or_else(|| Vec::new(env));
         token_trades.push_back(trade_index);
         self.token_trades.set(token_key, token_trades);
-        
+
         // Update total volume
         self.total_volume = self.total_volume.saturating_add(trade.price);
     }
 
     /// Get trades for a token
     pub fn get_token_trades(&self, collection_id: u64, token_id: u64) -> Vec<u32> {
-        self.token_trades.get((collection_id, token_id)).unwrap_or_else(|| Vec::new(&self.trades.env()))
+        self.token_trades
+            .get((collection_id, token_id))
+            .unwrap_or_else(|| Vec::new(&self.trades.env()))
     }
 }
 
@@ -549,16 +616,31 @@ impl FractionalRegistry {
     }
 
     /// Get shares for a shareholder
-    pub fn get_shares(&self, collection_id: u64, token_id: u64, shareholder: Address) -> Option<FractionalShare> {
+    pub fn get_shares(
+        &self,
+        collection_id: u64,
+        token_id: u64,
+        shareholder: Address,
+    ) -> Option<FractionalShare> {
         self.shares.get((collection_id, token_id, shareholder))
     }
 
     /// Set shares for a shareholder
-    pub fn set_shares(&mut self, collection_id: u64, token_id: u64, shareholder: Address, share: FractionalShare) {
-        self.shares.set((collection_id, token_id, shareholder), share);
-        
+    pub fn set_shares(
+        &mut self,
+        collection_id: u64,
+        token_id: u64,
+        shareholder: Address,
+        share: FractionalShare,
+    ) {
+        self.shares
+            .set((collection_id, token_id, shareholder), share);
+
         // Update shareholders list
-        let mut shareholders = self.token_shareholders.get((collection_id, token_id)).unwrap_or_else(|| Vec::new(&self.shares.env()));
+        let mut shareholders = self
+            .token_shareholders
+            .get((collection_id, token_id))
+            .unwrap_or_else(|| Vec::new(&self.shares.env()));
         let mut exists = false;
         for i in 0..shareholders.len() {
             if let Some(addr) = shareholders.get(i) {
@@ -570,20 +652,32 @@ impl FractionalRegistry {
         }
         if !exists {
             shareholders.push_back(shareholder);
-            self.token_shareholders.set((collection_id, token_id), shareholders);
+            self.token_shareholders
+                .set((collection_id, token_id), shareholders);
         }
     }
 
     /// Get all shareholders for a token
     pub fn get_shareholders(&self, collection_id: u64, token_id: u64) -> Vec<Address> {
-        self.token_shareholders.get((collection_id, token_id)).unwrap_or_else(|| Vec::new(&self.shares.env()))
+        self.token_shareholders
+            .get((collection_id, token_id))
+            .unwrap_or_else(|| Vec::new(&self.shares.env()))
     }
 
     /// Remove shareholder
-    pub fn remove_shareholder(&mut self, env: &Env, collection_id: u64, token_id: u64, shareholder: Address) {
+    pub fn remove_shareholder(
+        &mut self,
+        env: &Env,
+        collection_id: u64,
+        token_id: u64,
+        shareholder: Address,
+    ) {
         self.shares.remove((collection_id, token_id, shareholder));
-        
-        let mut shareholders = self.token_shareholders.get((collection_id, token_id)).unwrap_or_else(|| Vec::new(env));
+
+        let mut shareholders = self
+            .token_shareholders
+            .get((collection_id, token_id))
+            .unwrap_or_else(|| Vec::new(env));
         let mut new_shareholders = Vec::new(env);
         for i in 0..shareholders.len() {
             if let Some(addr) = shareholders.get(i) {
@@ -592,56 +686,93 @@ impl FractionalRegistry {
                 }
             }
         }
-        self.token_shareholders.set((collection_id, token_id), new_shareholders);
+        self.token_shareholders
+            .set((collection_id, token_id), new_shareholders);
     }
 }
 
 /// Helper functions for ID generation
 pub fn get_next_token_id(env: &Env) -> u64 {
-    let current: u64 = env.storage().instance().get(&NEXT_TOKEN_ID_KEY).unwrap_or(1);
-    env.storage().instance().set(&NEXT_TOKEN_ID_KEY, &(current + 1));
+    let current: u64 = env
+        .storage()
+        .instance()
+        .get(&NEXT_TOKEN_ID_KEY)
+        .unwrap_or(1);
+    env.storage()
+        .instance()
+        .set(&NEXT_TOKEN_ID_KEY, &(current + 1));
     current
 }
 
 pub fn get_next_collection_id(env: &Env) -> u64 {
-    let current: u64 = env.storage().instance().get(&NEXT_COLLECTION_ID_KEY).unwrap_or(1);
-    env.storage().instance().set(&NEXT_COLLECTION_ID_KEY, &(current + 1));
+    let current: u64 = env
+        .storage()
+        .instance()
+        .get(&NEXT_COLLECTION_ID_KEY)
+        .unwrap_or(1);
+    env.storage()
+        .instance()
+        .set(&NEXT_COLLECTION_ID_KEY, &(current + 1));
     current
 }
 
 pub fn get_next_listing_id(env: &Env) -> u64 {
-    let current: u64 = env.storage().instance().get(&NEXT_LISTING_ID_KEY).unwrap_or(1);
-    env.storage().instance().set(&NEXT_LISTING_ID_KEY, &(current + 1));
+    let current: u64 = env
+        .storage()
+        .instance()
+        .get(&NEXT_LISTING_ID_KEY)
+        .unwrap_or(1);
+    env.storage()
+        .instance()
+        .set(&NEXT_LISTING_ID_KEY, &(current + 1));
     current
 }
 
 pub fn get_next_offer_id(env: &Env) -> u64 {
-    let current: u64 = env.storage().instance().get(&NEXT_OFFER_ID_KEY).unwrap_or(1);
-    env.storage().instance().set(&NEXT_OFFER_ID_KEY, &(current + 1));
+    let current: u64 = env
+        .storage()
+        .instance()
+        .get(&NEXT_OFFER_ID_KEY)
+        .unwrap_or(1);
+    env.storage()
+        .instance()
+        .set(&NEXT_OFFER_ID_KEY, &(current + 1));
     current
 }
 
 pub fn get_next_loan_id(env: &Env) -> u64 {
     let current: u64 = env.storage().instance().get(&NEXT_LOAN_ID_KEY).unwrap_or(1);
-    env.storage().instance().set(&NEXT_LOAN_ID_KEY, &(current + 1));
+    env.storage()
+        .instance()
+        .set(&NEXT_LOAN_ID_KEY, &(current + 1));
     current
 }
 
 /// Marketplace state helpers
 pub fn is_marketplace_paused(env: &Env) -> bool {
-    env.storage().instance().get(&MARKETPLACE_PAUSED_KEY).unwrap_or(false)
+    env.storage()
+        .instance()
+        .get(&MARKETPLACE_PAUSED_KEY)
+        .unwrap_or(false)
 }
 
 pub fn set_marketplace_paused(env: &Env, paused: bool) {
-    env.storage().instance().set(&MARKETPLACE_PAUSED_KEY, &paused);
+    env.storage()
+        .instance()
+        .set(&MARKETPLACE_PAUSED_KEY, &paused);
 }
 
 pub fn get_platform_fee_bps(env: &Env) -> u32 {
-    env.storage().instance().get(&PLATFORM_FEE_BPS_KEY).unwrap_or(DEFAULT_PLATFORM_FEE_BPS)
+    env.storage()
+        .instance()
+        .get(&PLATFORM_FEE_BPS_KEY)
+        .unwrap_or(DEFAULT_PLATFORM_FEE_BPS)
 }
 
 pub fn set_platform_fee_bps(env: &Env, fee_bps: u32) {
-    env.storage().instance().set(&PLATFORM_FEE_BPS_KEY, &fee_bps);
+    env.storage()
+        .instance()
+        .set(&PLATFORM_FEE_BPS_KEY, &fee_bps);
 }
 
 pub fn get_fee_recipient(env: &Env) -> Option<Address> {

@@ -1,17 +1,19 @@
 #![cfg_attr(not(test), no_std)]
-use soroban_sdk::{contract, contractimpl, contracttype, symbol_short, Address, Env, Map, Symbol, Vec};
+use soroban_sdk::{
+    contract, contractimpl, contracttype, symbol_short, Address, Env, Map, Symbol, Vec,
+};
 
 // Bring in modules from parent directory
 mod admin;
+#[cfg(test)]
+mod alert_tests;
+mod alerts;
 mod errors;
 mod events;
 mod invariants;
-mod alerts;
-#[cfg(test)]
-mod alert_tests;
+mod liquidity_pool;
 mod rate_limit;
 mod storage;
-mod liquidity_pool;
 mod batch {
     include!("../batch.rs");
 }
@@ -33,48 +35,53 @@ mod analytics;
 mod migration;
 
 // NFT module
-mod nft_types;
 mod nft_errors;
-mod nft_storage;
 mod nft_events;
-mod nft_minting;
-mod nft_marketplace;
 mod nft_fractional;
 mod nft_lending;
+mod nft_marketplace;
+mod nft_minting;
+mod nft_storage;
+mod nft_types;
 
 // Zero-Knowledge Proof module for private transactions
-mod zkp_types;
+mod private_transaction;
 mod zkp_circuits;
 mod zkp_errors;
-mod zkp_verification;
-mod private_transaction;
 mod zkp_proof_generation;
+mod zkp_types;
+mod zkp_verification;
 
 // Re-export invariant functions for external use
 pub use invariants::verify_contract_invariants;
 pub use liquidity_pool::{LiquidityPool, PoolRegistry, Route};
 
 // ZKP exports for contract interface
-pub use zkp_types::{
-    PrivateTransaction, ZKProof, ProofScheme, RangeProof, BalanceProof,
-    TransactionWitness, Commitment, AuditLogEntry, AuditEventType, ProofVerificationResult,
+pub use private_transaction::{
+    AuditTrailManager, PrivateTransactionBuilder, PrivateTransactionProcessor, WitnessManager,
 };
 pub use zkp_errors::ZKPError;
-pub use zkp_verification::ProofVerifier;
-pub use private_transaction::{PrivateTransactionBuilder, PrivateTransactionProcessor, WitnessManager, AuditTrailManager};
 pub use zkp_proof_generation::ProofGenerator;
+pub use zkp_types::{
+    AuditEventType, AuditLogEntry, BalanceProof, Commitment, PrivateTransaction, ProofScheme,
+    ProofVerificationResult, RangeProof, TransactionWitness, ZKProof,
+};
+pub use zkp_verification::ProofVerifier;
 
+use analytics::{
+    AssetAllocation, BenchmarkComparison, PerformanceMetrics, PeriodReturns, PortfolioAnalytics,
+    TimeWindow,
+};
 use portfolio::{Asset, CachedPortfolio, CachedTopTraders, LPPosition, Portfolio};
 pub use portfolio::{Badge, Metrics, Transaction};
 pub use rate_limit::{RateLimitStatus, RateLimiter};
 pub use tiers::UserTier;
 use trading::perform_swap;
-use analytics::{PortfolioAnalytics, TimeWindow, PerformanceMetrics, AssetAllocation, BenchmarkComparison, PeriodReturns};
 
 // NFT imports
-use nft_types::*;
 use nft_errors::NFTError;
 use nft_storage::*;
+use nft_types::*;
 
 use crate::errors::SwapTradeError;
 use crate::storage::{ADMIN_KEY, PAUSED_KEY};
@@ -164,7 +171,8 @@ fn record_cache_access(env: &Env, query: Symbol, hit: bool) {
         misses,
         ratio_bps: cache_ratio_bps(hits, misses),
     };
-    env.events().publish((symbol_short!("cache"), query), payload);
+    env.events()
+        .publish((symbol_short!("cache"), query), payload);
 }
 
 fn invalidate_query_cache(env: &Env) {
@@ -172,7 +180,11 @@ fn invalidate_query_cache(env: &Env) {
     env.storage().instance().remove(&TOP_TRADERS_CACHE_KEY);
 }
 
-fn apply_trader_limit(env: &Env, traders: Vec<(Address, i128)>, limit: u32) -> Vec<(Address, i128)> {
+fn apply_trader_limit(
+    env: &Env,
+    traders: Vec<(Address, i128)>,
+    limit: u32,
+) -> Vec<(Address, i128)> {
     let max_limit = if limit > 100 { 100 } else { limit };
     let mut result = Vec::new(env);
     let len = traders.len() as usize;
@@ -464,7 +476,11 @@ impl CounterContract {
     }
 
     /// Update cache TTL in seconds (admin only).
-    pub fn set_cache_ttl(env: Env, caller: Address, ttl_seconds: u64) -> Result<(), SwapTradeError> {
+    pub fn set_cache_ttl(
+        env: Env,
+        caller: Address,
+        ttl_seconds: u64,
+    ) -> Result<(), SwapTradeError> {
         caller.require_auth();
         crate::admin::require_admin(&env, &caller)?;
         env.storage().instance().set(&CACHE_TTL_KEY, &ttl_seconds);
@@ -868,7 +884,9 @@ impl CounterContract {
         fee_tier: u32,
     ) -> Result<u64, ContractError> {
         let mut registry = load_pool_registry(&env);
-        let pool_id = registry.register_pool(&env, admin, token_a, token_b, initial_a, initial_b, fee_tier)?;
+        let pool_id = registry.register_pool(
+            &env, admin, token_a, token_b, initial_a, initial_b, fee_tier,
+        )?;
         save_pool_registry(&env, &registry);
         Ok(pool_id)
     }
@@ -999,11 +1017,19 @@ impl CounterContract {
             .get(&())
             .unwrap_or_else(|| Portfolio::new(&env));
 
-        PortfolioAnalytics::get_benchmark_comparison(&env, &portfolio, user, benchmark_id, time_window)
+        PortfolioAnalytics::get_benchmark_comparison(
+            &env,
+            &portfolio,
+            user,
+            benchmark_id,
+            time_window,
+        )
     }
 
     pub fn set_max_slippage_bps(env: Env, bps: u32) {
-        env.storage().instance().set(&symbol_short!("MAX_SLIP"), &bps);
+        env.storage()
+            .instance()
+            .set(&symbol_short!("MAX_SLIP"), &bps);
     }
 
     /// Calculate period returns between timestamps
@@ -1019,7 +1045,13 @@ impl CounterContract {
             .get(&())
             .unwrap_or_else(|| Portfolio::new(&env));
 
-        PortfolioAnalytics::get_period_returns(&env, &portfolio, user, start_timestamp, end_timestamp)
+        PortfolioAnalytics::get_period_returns(
+            &env,
+            &portfolio,
+            user,
+            start_timestamp,
+            end_timestamp,
+        )
     }
 }
 
@@ -1030,20 +1062,20 @@ mod balance_test;
 #[cfg(test)]
 mod batch_tests;
 #[cfg(test)]
+mod dashboard_tests;
+#[cfg(test)]
 mod enhanced_trading_tests; // NEW: Enhanced trading tests for better coverage
 #[cfg(test)]
 mod fuzz_tests;
 #[cfg(test)]
-mod dashboard_tests;
-#[cfg(test)]
 mod lp_tests;
 mod migration_tests;
+#[cfg(test)]
+mod nft_lending_tests;
 #[cfg(test)]
 mod oracle_tests;
 #[cfg(test)]
 mod rate_limit_tests;
-#[cfg(test)]
-mod nft_lending_tests;
 #[cfg(test)]
 mod transaction_tests; // NEW: Fuzz tests for security hardening
 

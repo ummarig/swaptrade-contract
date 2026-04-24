@@ -178,9 +178,9 @@ fn fuzz_lp_token_calculations() {
 
     // Test various deposit ratios
     let mut test_cases = Vec::new(&env);
-    test_cases.push_back((1000, 1000, 0, 1000));             // First deposit, equal amounts
-    test_cases.push_back((1000, 2000, 1000, 1414));          // Unequal pool, proportional
-    test_cases.push_back((1, 1, 1000000, 1));                // Minimum deposit
+    test_cases.push_back((1000, 1000, 0, 1000)); // First deposit, equal amounts
+    test_cases.push_back((1000, 2000, 1000, 1414)); // Unequal pool, proportional
+    test_cases.push_back((1, 1, 1000000, 1)); // Minimum deposit
     test_cases.push_back((1000000, 1000000, 1000, 1000000)); // Large deposit
 
     for (xlm_deposit, usdc_deposit, existing_lp, expected_min) in test_cases {
@@ -227,9 +227,9 @@ fn integer_sqrt(n: u128) -> u128 {
 fn fuzz_amm_constant_product() {
     let env = Env::default();
     let mut test_cases = Vec::new(&env);
-    test_cases.push_back((10000, 10000, 11000, 9090));         // Normal swap with fees
-    test_cases.push_back((50000, 20000, 51000, 19607));        // Different pool ratio
-    test_cases.push_back((1000, 1000, 1100, 909));             // Small pool
+    test_cases.push_back((10000, 10000, 11000, 9090)); // Normal swap with fees
+    test_cases.push_back((50000, 20000, 51000, 19607)); // Different pool ratio
+    test_cases.push_back((1000, 1000, 1100, 909)); // Small pool
     test_cases.push_back((1000000, 1000000, 1100000, 909090)); // Large pool
 
     for (xlm_before, usdc_before, xlm_after, usdc_after) in test_cases {
@@ -252,7 +252,7 @@ fn fuzz_amm_reject_impossible() {
     let mut impossible_cases = Vec::new(&env);
     impossible_cases.push_back((10000, 10000, 9000, 12000)); // k_before=100M, k_after=108M
     impossible_cases.push_back((10000, 10000, 8000, 13000)); // k_before=100M, k_after=104M
-    // Negative reserves
+                                                             // Negative reserves
     impossible_cases.push_back((10000, 10000, -1000, 11000));
     impossible_cases.push_back((10000, 10000, 11000, -1000));
 
@@ -348,9 +348,9 @@ fn fuzz_batch_operation_counts() {
     test_cases.push_back((10, 0, 10, true, true)); // All fail, atomic
     test_cases.push_back((10, 5, 5, true, false)); // Mixed, atomic - should fail
     test_cases.push_back((10, 5, 5, false, true)); // Mixed, best-effort - should pass
-    test_cases.push_back((0, 0, 0, false, true));  // Empty batch
-    test_cases.push_back((1, 1, 0, true, true));   // Single operation success
-    test_cases.push_back((1, 0, 1, true, true));   // Single operation failure
+    test_cases.push_back((0, 0, 0, false, true)); // Empty batch
+    test_cases.push_back((1, 1, 0, true, true)); // Single operation success
+    test_cases.push_back((1, 0, 1, true, true)); // Single operation failure
 
     for (total, success, failure, is_atomic, should_pass) in test_cases {
         let result = verify_batch_invariants(&env, total, success, failure, is_atomic);
@@ -440,12 +440,12 @@ fn fuzz_slippage_calculations() {
     let env = Env::default();
     let mut test_cases = Vec::new(&env);
     test_cases.push_back((10000, 10000, 100, true)); // No slippage
-    test_cases.push_back((10000, 9900, 100, true));  // 1% slippage, max 1%
+    test_cases.push_back((10000, 9900, 100, true)); // 1% slippage, max 1%
     test_cases.push_back((10000, 9800, 100, false)); // 2% slippage, max 1%
     test_cases.push_back((10000, 10100, 100, true)); // Positive slippage (better)
-    test_cases.push_back((10000, 0, 10000, true));   // 100% slippage allowed
-    test_cases.push_back((0, 0, 100, true));         // Zero expected
-    test_cases.push_back((0, 100, 100, false));      // Non-zero actual with zero expected
+    test_cases.push_back((10000, 0, 10000, true)); // 100% slippage allowed
+    test_cases.push_back((0, 0, 100, true)); // Zero expected
+    test_cases.push_back((0, 100, 100, false)); // Non-zero actual with zero expected
 
     for (expected, actual, max_slippage, should_pass) in test_cases {
         let result = invariant_slippage_bounds(expected, actual, max_slippage);
@@ -472,11 +472,11 @@ fn fuzz_slippage_calculations() {
 fn fuzz_balance_update_consistency() {
     let env = Env::default();
     let mut test_cases = Vec::new(&env);
-    test_cases.push_back((1000, 200, 300, 1100, true));                     // Normal case
-    test_cases.push_back((1000, 0, 0, 1000, true));                         // No change
-    test_cases.push_back((1000, 1000, 0, 0, true));                         // Full debit
-    test_cases.push_back((1000, 0, 1000, 2000, true));                      // Full credit
-    test_cases.push_back((1000, 200, 300, 1000, false));                    // Incorrect result
+    test_cases.push_back((1000, 200, 300, 1100, true)); // Normal case
+    test_cases.push_back((1000, 0, 0, 1000, true)); // No change
+    test_cases.push_back((1000, 1000, 0, 0, true)); // Full debit
+    test_cases.push_back((1000, 0, 1000, 2000, true)); // Full credit
+    test_cases.push_back((1000, 200, 300, 1000, false)); // Incorrect result
     test_cases.push_back((i128::MAX - 100, 50, 50, i128::MAX - 100, true)); // Near max
 
     for (before, debit, credit, after, should_pass) in test_cases {
@@ -807,10 +807,10 @@ fn fuzz_pool_stats_consistency() {
 fn fuzz_version_monotonicity() {
     let env = Env::default();
     let mut versions = Vec::new(&env);
-    versions.push_back((1, 1, true));  // Same version is ok
-    versions.push_back((1, 2, true));  // Upgrade is ok
+    versions.push_back((1, 1, true)); // Same version is ok
+    versions.push_back((1, 2, true)); // Upgrade is ok
     versions.push_back((2, 1, false)); // Downgrade is not ok
-    versions.push_back((1, 5, true));  // Big upgrade is ok
+    versions.push_back((1, 5, true)); // Big upgrade is ok
 
     for (prev, curr, should_pass) in versions {
         let result = invariant_version_monotonic(prev, curr);

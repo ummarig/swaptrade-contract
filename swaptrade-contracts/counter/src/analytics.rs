@@ -1,5 +1,5 @@
-use soroban_sdk::{contracttype, Address, Env, Map, Vec, symbol_short};
 use crate::portfolio::{Asset, Portfolio};
+use soroban_sdk::{contracttype, symbol_short, Address, Env, Map, Vec};
 
 #[derive(Clone, Debug, PartialEq)]
 #[contracttype]
@@ -14,18 +14,18 @@ pub enum TimeWindow {
 #[derive(Clone, Debug, PartialEq)]
 #[contracttype]
 pub struct PerformanceMetrics {
-    pub sharpe_ratio: u128,        // Fixed-point: 7 decimals (10^-7 precision)
-    pub sortino_ratio: u128,       // Fixed-point: 7 decimals
-    pub max_drawdown: u128,        // Fixed-point: 7 decimals (percentage)
-    pub volatility: u128,          // Fixed-point: 7 decimals (annualized)
-    pub total_return: i128,        // Raw return amount
-    pub win_rate: u128,            // Fixed-point: 7 decimals (percentage)
+    pub sharpe_ratio: u128,  // Fixed-point: 7 decimals (10^-7 precision)
+    pub sortino_ratio: u128, // Fixed-point: 7 decimals
+    pub max_drawdown: u128,  // Fixed-point: 7 decimals (percentage)
+    pub volatility: u128,    // Fixed-point: 7 decimals (annualized)
+    pub total_return: i128,  // Raw return amount
+    pub win_rate: u128,      // Fixed-point: 7 decimals (percentage)
 }
 
 #[derive(Clone, Debug, PartialEq)]
 #[contracttype]
 pub struct AssetAllocation {
-    pub assets: Vec<(Asset, u128)>,  // Asset and percentage allocation (fixed-point: 7 decimals)
+    pub assets: Vec<(Asset, u128)>, // Asset and percentage allocation (fixed-point: 7 decimals)
     pub correlations: Map<(Asset, Asset), i128>, // Correlation matrix (fixed-point: 7 decimals)
     pub diversification_score: u128, // Fixed-point: 7 decimals
 }
@@ -33,18 +33,18 @@ pub struct AssetAllocation {
 #[derive(Clone, Debug, PartialEq)]
 #[contracttype]
 pub struct BenchmarkComparison {
-    pub alpha: i128,               // Excess return over benchmark
-    pub beta: u128,                // Market sensitivity (fixed-point: 7 decimals)
-    pub tracking_error: u128,      // Standard deviation of difference (fixed-point: 7 decimals)
-    pub information_ratio: i128,   // Risk-adjusted excess return (fixed-point: 7 decimals)
+    pub alpha: i128,             // Excess return over benchmark
+    pub beta: u128,              // Market sensitivity (fixed-point: 7 decimals)
+    pub tracking_error: u128,    // Standard deviation of difference (fixed-point: 7 decimals)
+    pub information_ratio: i128, // Risk-adjusted excess return (fixed-point: 7 decimals)
 }
 
 #[derive(Clone, Debug, PartialEq)]
 #[contracttype]
 pub struct PeriodReturns {
-    pub time_weighted_return: i128,    // Time-weighted return
-    pub arithmetic_return: i128,       // Simple arithmetic return
-    pub geometric_return: i128,        // Compound return
+    pub time_weighted_return: i128, // Time-weighted return
+    pub arithmetic_return: i128,    // Simple arithmetic return
+    pub geometric_return: i128,     // Compound return
     pub start_value: i128,
     pub end_value: i128,
     pub period_days: u32,
@@ -55,7 +55,7 @@ pub struct PortfolioAnalytics;
 impl PortfolioAnalytics {
     // Fixed-point arithmetic constants
     const FIXED_POINT_PRECISION: u128 = 10_000_000; // 10^7 for 7 decimal places
-    const FIXED_POINT_ONE: u128 = 10_000_000;       // 1.0 in fixed-point
+    const FIXED_POINT_ONE: u128 = 10_000_000; // 1.0 in fixed-point
 
     /// Calculate performance metrics for a user over a time window
     pub fn get_performance_metrics(
@@ -64,7 +64,8 @@ impl PortfolioAnalytics {
         user: Address,
         time_window: TimeWindow,
     ) -> PerformanceMetrics {
-        let daily_values = Self::get_daily_portfolio_values(env, portfolio, user.clone(), time_window);
+        let daily_values =
+            Self::get_daily_portfolio_values(env, portfolio, user.clone(), time_window);
         if daily_values.is_empty() {
             return PerformanceMetrics {
                 sharpe_ratio: 0,
@@ -87,15 +88,19 @@ impl PortfolioAnalytics {
         let risk_free_rate = 2_000_000; // 0.02 * FIXED_POINT_PRECISION
 
         let sharpe_ratio = if volatility > 0 {
-            ((total_return as u128 * Self::FIXED_POINT_PRECISION / daily_values.len() as u128).saturating_sub(risk_free_rate))
-                .saturating_mul(Self::FIXED_POINT_PRECISION) / volatility
+            ((total_return as u128 * Self::FIXED_POINT_PRECISION / daily_values.len() as u128)
+                .saturating_sub(risk_free_rate))
+            .saturating_mul(Self::FIXED_POINT_PRECISION)
+                / volatility
         } else {
             0
         };
 
         let sortino_ratio = if downside_volatility > 0 {
-            ((total_return as u128 * Self::FIXED_POINT_PRECISION / daily_values.len() as u128).saturating_sub(risk_free_rate))
-                .saturating_mul(Self::FIXED_POINT_PRECISION) / downside_volatility
+            ((total_return as u128 * Self::FIXED_POINT_PRECISION / daily_values.len() as u128)
+                .saturating_sub(risk_free_rate))
+            .saturating_mul(Self::FIXED_POINT_PRECISION)
+                / downside_volatility
         } else {
             0
         };
@@ -136,13 +141,16 @@ impl PortfolioAnalytics {
         // For now, we'll use simplified logic assuming XLM = 1 USD, USDC = 1 USD
 
         let xlm_balance = portfolio.balance_of(env, Asset::XLM, user.clone());
-        let usdc_balance = portfolio.balance_of(env, Asset::Custom(symbol_short!("USDCSIM")), user.clone());
+        let usdc_balance =
+            portfolio.balance_of(env, Asset::Custom(symbol_short!("USDCSIM")), user.clone());
 
         total_value = xlm_balance + usdc_balance;
 
         if total_value > 0 {
-            let xlm_percentage = (xlm_balance as u128 * Self::FIXED_POINT_PRECISION) / total_value as u128;
-            let usdc_percentage = (usdc_balance as u128 * Self::FIXED_POINT_PRECISION) / total_value as u128;
+            let xlm_percentage =
+                (xlm_balance as u128 * Self::FIXED_POINT_PRECISION) / total_value as u128;
+            let usdc_percentage =
+                (usdc_balance as u128 * Self::FIXED_POINT_PRECISION) / total_value as u128;
 
             assets.push_back((Asset::XLM, xlm_percentage));
             assets.push_back((Asset::Custom(symbol_short!("USDCSIM")), usdc_percentage));
@@ -178,7 +186,8 @@ impl PortfolioAnalytics {
         benchmark_id: Symbol,
         time_window: TimeWindow,
     ) -> BenchmarkComparison {
-        let portfolio_returns = Self::get_daily_portfolio_values(env, portfolio, user.clone(), time_window);
+        let portfolio_returns =
+            Self::get_daily_portfolio_values(env, portfolio, user.clone(), time_window);
         // In a real implementation, we'd fetch benchmark data
         // For now, return placeholder values
         let benchmark_returns = Vec::new(env); // Placeholder
@@ -238,7 +247,13 @@ impl PortfolioAnalytics {
         start_timestamp: u64,
         end_timestamp: u64,
     ) -> PeriodReturns {
-        let daily_values = Self::get_portfolio_values_in_range(env, portfolio, user.clone(), start_timestamp, end_timestamp);
+        let daily_values = Self::get_portfolio_values_in_range(
+            env,
+            portfolio,
+            user.clone(),
+            start_timestamp,
+            end_timestamp,
+        );
 
         if daily_values.is_empty() {
             let returns = PeriodReturns {
@@ -312,12 +327,12 @@ impl PortfolioAnalytics {
                 // Simplified YTD - would need proper calendar logic
                 let year_start = current_date - (current_date % 365);
                 (year_start, current_date)
-            },
+            }
             TimeWindow::All => {
                 // Get all available historical data
                 // For now, return last 90 days as a reasonable "all" period
                 (current_date.saturating_sub(90), current_date)
-            },
+            }
         };
 
         portfolio.get_portfolio_values_in_range(env, user, start_date, end_date)
@@ -411,7 +426,8 @@ impl PortfolioAnalytics {
             if current > peak {
                 peak = current;
             } else {
-                let drawdown = ((peak - current) as u128 * Self::FIXED_POINT_PRECISION) / peak as u128;
+                let drawdown =
+                    ((peak - current) as u128 * Self::FIXED_POINT_PRECISION) / peak as u128;
                 if drawdown > max_drawdown {
                     max_drawdown = drawdown;
                 }

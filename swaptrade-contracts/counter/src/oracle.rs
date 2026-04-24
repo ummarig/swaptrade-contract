@@ -30,7 +30,10 @@ fn tolerance_key(pair: &(Symbol, Symbol)) -> (Symbol, Symbol, Symbol) {
 
 pub fn get_price_update_tolerance_bps(env: &Env, pair: (Symbol, Symbol)) -> u32 {
     let key = tolerance_key(&pair);
-    env.storage().instance().get(&key).unwrap_or(DEFAULT_PRICE_UPDATE_TOLERANCE_BPS)
+    env.storage()
+        .instance()
+        .get(&key)
+        .unwrap_or(DEFAULT_PRICE_UPDATE_TOLERANCE_BPS)
 }
 
 pub fn set_price_update_tolerance_bps(env: &Env, pair: (Symbol, Symbol), bps: u32) {
@@ -92,7 +95,13 @@ impl DecentralizedOracle {
         self.feeds.push(feed);
     }
 
-    pub fn submit_price(&self, feed_id: usize, token_pair: (Symbol, Symbol), price: u128, timestamp: u64) {
+    pub fn submit_price(
+        &self,
+        feed_id: usize,
+        token_pair: (Symbol, Symbol),
+        price: u128,
+        timestamp: u64,
+    ) {
         if let Some(feed) = self.feeds.get(feed_id) {
             feed.submit_price(token_pair, price, timestamp);
         }
@@ -136,7 +145,11 @@ impl DecentralizedOracle {
             .collect()
     }
 
-    pub fn get_price_history(&self, token_pair: (Symbol, Symbol), lookback_periods: usize) -> Vec<u128> {
+    pub fn get_price_history(
+        &self,
+        token_pair: (Symbol, Symbol),
+        lookback_periods: usize,
+    ) -> Vec<u128> {
         self.feeds
             .iter()
             .flat_map(|feed| feed.get_price_history(token_pair, lookback_periods))

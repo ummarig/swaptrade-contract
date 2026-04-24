@@ -3,15 +3,14 @@
 use soroban_sdk::{symbol_short, testutils::Address as _, Address, Env, String};
 
 use crate::nft::{
-    create_collection, mint_nft, set_nft_valuation, get_nft_valuation, get_collection_floor_price,
+    create_collection, get_collection_floor_price, get_nft_valuation, mint_nft, set_nft_valuation,
 };
+use crate::nft_errors::NFTError;
 use crate::nft_lending::{
-    request_loan, fund_loan, calculate_loan_ltv, is_loan_undercollateralized,
-    monitor_and_queue_liquidations, process_liquidation_queue, place_liquidation_bid,
-    get_loan, get_collateral_value
+    calculate_loan_ltv, fund_loan, get_collateral_value, get_loan, is_loan_undercollateralized,
+    monitor_and_queue_liquidations, place_liquidation_bid, process_liquidation_queue, request_loan,
 };
 use crate::nft_types::NFTStandard;
-use crate::nft_errors::NFTError;
 
 fn setup_env() -> (Env, Address, Address) {
     let env = Env::default();
@@ -49,7 +48,14 @@ fn test_undercollateralized_loan_is_queued_and_partial_liquidated() {
     .unwrap();
 
     // Set valuation to 120, so 100 loan is undercollateralized but not deeply
-    set_nft_valuation(&env, collection_id, token_id, 120, crate::nft_types::ValuationMethod::Manual).unwrap();
+    set_nft_valuation(
+        &env,
+        collection_id,
+        token_id,
+        120,
+        crate::nft_types::ValuationMethod::Manual,
+    )
+    .unwrap();
 
     let loan_id = crate::nft_lending::request_loan(
         &env,
@@ -75,8 +81,14 @@ fn test_undercollateralized_loan_is_queued_and_partial_liquidated() {
     assert_eq!(processed, 1);
 
     let updated_loan = get_loan(&env, loan_id).unwrap();
-    assert!(!updated_loan.is_liquidated, "partial liquidation should not mark liquidated");
-    assert!(updated_loan.repayment_amount < 120, "remaining due should be reduced");
+    assert!(
+        !updated_loan.is_liquidated,
+        "partial liquidation should not mark liquidated"
+    );
+    assert!(
+        updated_loan.repayment_amount < 120,
+        "remaining due should be reduced"
+    );
 }
 
 #[test]
@@ -106,9 +118,25 @@ fn test_full_liquidation_without_bids_transfers_to_lender() {
     )
     .unwrap();
 
-    set_nft_valuation(&env, collection_id, token_id, 80, crate::nft_types::ValuationMethod::Manual).unwrap();
+    set_nft_valuation(
+        &env,
+        collection_id,
+        token_id,
+        80,
+        crate::nft_types::ValuationMethod::Manual,
+    )
+    .unwrap();
 
-    let loan_id = request_loan(&env, borrower.clone(), collection_id, token_id, 100, 1, 86400).unwrap();
+    let loan_id = request_loan(
+        &env,
+        borrower.clone(),
+        collection_id,
+        token_id,
+        100,
+        1,
+        86400,
+    )
+    .unwrap();
     fund_loan(&env, lender.clone(), loan_id).unwrap();
 
     assert!(is_loan_undercollateralized(&env, loan_id).unwrap());
@@ -120,6 +148,8 @@ fn test_full_liquidation_without_bids_transfers_to_lender() {
     let updated_loan = get_loan(&env, loan_id).unwrap();
     assert!(updated_loan.is_liquidated);
 
-    let owner = crate::nft_minting::get_nft(&env, collection_id, token_id).unwrap().owner;
+    let owner = crate::nft_minting::get_nft(&env, collection_id, token_id)
+        .unwrap()
+        .owner;
     assert_eq!(owner, lender);
 }

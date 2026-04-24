@@ -1,13 +1,9 @@
 #![cfg_attr(not(test), no_std)]
-use soroban_sdk::{Address, Env, Symbol, String};
 use crate::nft_types::{NFTStandard, ValuationMethod};
+use soroban_sdk::{Address, Env, String, Symbol};
 
 /// Emit event when a new collection is created
-pub fn emit_collection_created(
-    env: &Env,
-    collection_id: u64,
-    owner: Address,
-) {
+pub fn emit_collection_created(env: &Env, collection_id: u64, owner: Address) {
     env.events().publish(
         (Symbol::new(env, "CollectionCreated"), collection_id),
         (owner,),
@@ -22,17 +18,16 @@ pub fn emit_collection_ownership_transferred(
     new_owner: Address,
 ) {
     env.events().publish(
-        (Symbol::new(env, "CollectionOwnershipTransferred"), collection_id),
+        (
+            Symbol::new(env, "CollectionOwnershipTransferred"),
+            collection_id,
+        ),
         (previous_owner, new_owner),
     );
 }
 
 /// Emit event when minting status changes
-pub fn emit_minting_status_changed(
-    env: &Env,
-    collection_id: u64,
-    active: bool,
-) {
+pub fn emit_minting_status_changed(env: &Env, collection_id: u64, active: bool) {
     env.events().publish(
         (Symbol::new(env, "MintingStatusChanged"), collection_id),
         (active,),
@@ -69,13 +64,7 @@ pub fn emit_nft_transferred(
 }
 
 /// Emit event when an NFT is burned
-pub fn emit_nft_burned(
-    env: &Env,
-    collection_id: u64,
-    token_id: u64,
-    owner: Address,
-    amount: u64,
-) {
+pub fn emit_nft_burned(env: &Env, collection_id: u64, token_id: u64, owner: Address, amount: u64) {
     env.events().publish(
         (Symbol::new(env, "NFTBurned"), collection_id, token_id),
         (owner, amount),
@@ -99,22 +88,13 @@ pub fn emit_listing_created(
 }
 
 /// Emit event when a listing is cancelled
-pub fn emit_listing_cancelled(
-    env: &Env,
-    listing_id: u64,
-) {
-    env.events().publish(
-        (Symbol::new(env, "ListingCancelled"), listing_id),
-        (),
-    );
+pub fn emit_listing_cancelled(env: &Env, listing_id: u64) {
+    env.events()
+        .publish((Symbol::new(env, "ListingCancelled"), listing_id), ());
 }
 
 /// Emit event when a listing is updated
-pub fn emit_listing_updated(
-    env: &Env,
-    listing_id: u64,
-    new_price: i128,
-) {
+pub fn emit_listing_updated(env: &Env, listing_id: u64, new_price: i128) {
     env.events().publish(
         (Symbol::new(env, "ListingUpdated"), listing_id),
         (new_price,),
@@ -122,12 +102,7 @@ pub fn emit_listing_updated(
 }
 
 /// Emit event when a bid is placed on an auction
-pub fn emit_bid_placed(
-    env: &Env,
-    listing_id: u64,
-    bidder: Address,
-    bid_amount: i128,
-) {
+pub fn emit_bid_placed(env: &Env, listing_id: u64, bidder: Address, bid_amount: i128) {
     env.events().publish(
         (Symbol::new(env, "BidPlaced"), listing_id),
         (bidder, bid_amount),
@@ -135,12 +110,7 @@ pub fn emit_bid_placed(
 }
 
 /// Emit event when an auction is finalized
-pub fn emit_auction_finalized(
-    env: &Env,
-    listing_id: u64,
-    winner: Address,
-    winning_bid: i128,
-) {
+pub fn emit_auction_finalized(env: &Env, listing_id: u64, winner: Address, winning_bid: i128) {
     env.events().publish(
         (Symbol::new(env, "AuctionFinalized"), listing_id),
         (winner, winning_bid),
@@ -163,39 +133,21 @@ pub fn emit_offer_created(
 }
 
 /// Emit event when an offer is cancelled
-pub fn emit_offer_cancelled(
-    env: &Env,
-    offer_id: u64,
-) {
-    env.events().publish(
-        (Symbol::new(env, "OfferCancelled"), offer_id),
-        (),
-    );
+pub fn emit_offer_cancelled(env: &Env, offer_id: u64) {
+    env.events()
+        .publish((Symbol::new(env, "OfferCancelled"), offer_id), ());
 }
 
 /// Emit event when an offer is accepted
-pub fn emit_offer_accepted(
-    env: &Env,
-    offer_id: u64,
-    seller: Address,
-) {
-    env.events().publish(
-        (Symbol::new(env, "OfferAccepted"), offer_id),
-        (seller,),
-    );
+pub fn emit_offer_accepted(env: &Env, offer_id: u64, seller: Address) {
+    env.events()
+        .publish((Symbol::new(env, "OfferAccepted"), offer_id), (seller,));
 }
 
 /// Emit event when an NFT is sold
-pub fn emit_nft_sold(
-    env: &Env,
-    listing_id: u64,
-    buyer: Address,
-    price: i128,
-) {
-    env.events().publish(
-        (Symbol::new(env, "NFTSold"), listing_id),
-        (buyer, price),
-    );
+pub fn emit_nft_sold(env: &Env, listing_id: u64, buyer: Address, price: i128) {
+    env.events()
+        .publish((Symbol::new(env, "NFTSold"), listing_id), (buyer, price));
 }
 
 /// Emit event when an NFT trade occurs
@@ -225,20 +177,23 @@ pub fn emit_nft_fractionalized(
     initial_price: i128,
 ) {
     env.events().publish(
-        (Symbol::new(env, "NFTFractionalized"), collection_id, token_id),
+        (
+            Symbol::new(env, "NFTFractionalized"),
+            collection_id,
+            token_id,
+        ),
         (owner, total_shares, initial_price),
     );
 }
 
 /// Emit event when an NFT is defractionalized
-pub fn emit_nft_defractionalized(
-    env: &Env,
-    collection_id: u64,
-    token_id: u64,
-    owner: Address,
-) {
+pub fn emit_nft_defractionalized(env: &Env, collection_id: u64, token_id: u64, owner: Address) {
     env.events().publish(
-        (Symbol::new(env, "NFTDefractionalized"), collection_id, token_id),
+        (
+            Symbol::new(env, "NFTDefractionalized"),
+            collection_id,
+            token_id,
+        ),
         (owner,),
     );
 }
@@ -253,7 +208,11 @@ pub fn emit_fractional_shares_purchased(
     price_per_share: i128,
 ) {
     env.events().publish(
-        (Symbol::new(env, "FractionalSharesPurchased"), collection_id, token_id),
+        (
+            Symbol::new(env, "FractionalSharesPurchased"),
+            collection_id,
+            token_id,
+        ),
         (buyer, shares, price_per_share),
     );
 }
@@ -268,7 +227,11 @@ pub fn emit_fractional_shares_sold(
     price_per_share: i128,
 ) {
     env.events().publish(
-        (Symbol::new(env, "FractionalSharesSold"), collection_id, token_id),
+        (
+            Symbol::new(env, "FractionalSharesSold"),
+            collection_id,
+            token_id,
+        ),
         (seller, shares, price_per_share),
     );
 }
@@ -283,7 +246,11 @@ pub fn emit_fractional_shares_transferred(
     shares: u64,
 ) {
     env.events().publish(
-        (Symbol::new(env, "FractionalSharesTransferred"), collection_id, token_id),
+        (
+            Symbol::new(env, "FractionalSharesTransferred"),
+            collection_id,
+            token_id,
+        ),
         (from, to, shares),
     );
 }
@@ -304,25 +271,13 @@ pub fn emit_loan_requested(
 }
 
 /// Emit event when a loan is funded
-pub fn emit_loan_funded(
-    env: &Env,
-    loan_id: u64,
-    lender: Address,
-    amount: i128,
-) {
-    env.events().publish(
-        (Symbol::new(env, "LoanFunded"), loan_id),
-        (lender, amount),
-    );
+pub fn emit_loan_funded(env: &Env, loan_id: u64, lender: Address, amount: i128) {
+    env.events()
+        .publish((Symbol::new(env, "LoanFunded"), loan_id), (lender, amount));
 }
 
 /// Emit event when a loan is repaid
-pub fn emit_loan_repaid(
-    env: &Env,
-    loan_id: u64,
-    borrower: Address,
-    repayment_amount: i128,
-) {
+pub fn emit_loan_repaid(env: &Env, loan_id: u64, borrower: Address, repayment_amount: i128) {
     env.events().publish(
         (Symbol::new(env, "LoanRepaid"), loan_id),
         (borrower, repayment_amount),
@@ -345,19 +300,12 @@ pub fn emit_loan_liquidated(
 
 /// Emit event when a loan is queued for liquidation
 pub fn emit_liquidation_queued(env: &Env, loan_id: u64) {
-    env.events().publish(
-        (Symbol::new(env, "LiquidationQueued"), loan_id),
-        (),
-    );
+    env.events()
+        .publish((Symbol::new(env, "LiquidationQueued"), loan_id), ());
 }
 
 /// Emit event when a liquidation auction bid is placed
-pub fn emit_liquidation_bid_placed(
-    env: &Env,
-    loan_id: u64,
-    bidder: Address,
-    bid_amount: i128,
-) {
+pub fn emit_liquidation_bid_placed(env: &Env, loan_id: u64, bidder: Address, bid_amount: i128) {
     env.events().publish(
         (Symbol::new(env, "LiquidationBidPlaced"), loan_id),
         (bidder, bid_amount),
@@ -387,15 +335,9 @@ pub fn emit_liquidation_notification(env: &Env, user: Address, loan_id: u64, mes
 }
 
 /// Emit event when a loan is cancelled
-pub fn emit_loan_cancelled(
-    env: &Env,
-    loan_id: u64,
-    borrower: Address,
-) {
-    env.events().publish(
-        (Symbol::new(env, "LoanCancelled"), loan_id),
-        (borrower,),
-    );
+pub fn emit_loan_cancelled(env: &Env, loan_id: u64, borrower: Address) {
+    env.events()
+        .publish((Symbol::new(env, "LoanCancelled"), loan_id), (borrower,));
 }
 
 /// Emit event when royalty is paid
@@ -413,11 +355,7 @@ pub fn emit_royalty_paid(
 }
 
 /// Emit event when platform fee is collected
-pub fn emit_platform_fee_collected(
-    env: &Env,
-    amount: i128,
-    recipient: Address,
-) {
+pub fn emit_platform_fee_collected(env: &Env, amount: i128, recipient: Address) {
     env.events().publish(
         (Symbol::new(env, "PlatformFeeCollected"),),
         (amount, recipient),
@@ -433,17 +371,17 @@ pub fn emit_valuation_updated(
     method: ValuationMethod,
 ) {
     env.events().publish(
-        (Symbol::new(env, "ValuationUpdated"), collection_id, token_id),
+        (
+            Symbol::new(env, "ValuationUpdated"),
+            collection_id,
+            token_id,
+        ),
         (estimated_value, method),
     );
 }
 
 /// Emit event when collection floor price is updated
-pub fn emit_floor_price_updated(
-    env: &Env,
-    collection_id: u64,
-    new_floor_price: i128,
-) {
+pub fn emit_floor_price_updated(env: &Env, collection_id: u64, new_floor_price: i128) {
     env.events().publish(
         (Symbol::new(env, "FloorPriceUpdated"), collection_id),
         (new_floor_price,),
@@ -451,23 +389,13 @@ pub fn emit_floor_price_updated(
 }
 
 /// Emit event when marketplace is paused/unpaused
-pub fn emit_marketplace_paused(
-    env: &Env,
-    paused: bool,
-    admin: Address,
-) {
-    env.events().publish(
-        (Symbol::new(env, "MarketplacePaused"),),
-        (paused, admin),
-    );
+pub fn emit_marketplace_paused(env: &Env, paused: bool, admin: Address) {
+    env.events()
+        .publish((Symbol::new(env, "MarketplacePaused"),), (paused, admin));
 }
 
 /// Emit event when platform fee is updated
-pub fn emit_platform_fee_updated(
-    env: &Env,
-    old_fee_bps: u32,
-    new_fee_bps: u32,
-) {
+pub fn emit_platform_fee_updated(env: &Env, old_fee_bps: u32, new_fee_bps: u32) {
     env.events().publish(
         (Symbol::new(env, "PlatformFeeUpdated"),),
         (old_fee_bps, new_fee_bps),
@@ -516,11 +444,7 @@ pub fn emit_nft_unwrapped(
 }
 
 /// Emit event when a new badge is awarded for NFT activity
-pub fn emit_nft_badge_awarded(
-    env: &Env,
-    user: Address,
-    badge_type: Symbol,
-) {
+pub fn emit_nft_badge_awarded(env: &Env, user: Address, badge_type: Symbol) {
     env.events().publish(
         (Symbol::new(env, "NFTBadgeAwarded"), user),
         (badge_type, env.ledger().timestamp()),

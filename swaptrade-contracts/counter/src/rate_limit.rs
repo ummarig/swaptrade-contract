@@ -119,7 +119,7 @@ impl TimeWindow {
             // Fallback to division for non-power-of-2 durations
             (current_timestamp / window_duration) * window_duration
         };
-        
+
         TimeWindow {
             window_start,
             window_duration,
@@ -129,9 +129,13 @@ impl TimeWindow {
     /// Get hourly window using cached boundary if available
     pub fn hourly_cached(env: &Env, current_timestamp: u64) -> Self {
         let cache_key = symbol_short!("hourly_c");
-        
+
         // Try to get cached boundary
-        if let Some(cached) = env.storage().persistent().get::<CachedWindowBoundary>(&cache_key) {
+        if let Some(cached) = env
+            .storage()
+            .persistent()
+            .get::<CachedWindowBoundary>(&cache_key)
+        {
             if cached.is_valid(current_timestamp) {
                 return TimeWindow {
                     window_start: cached.window_start,
@@ -139,21 +143,25 @@ impl TimeWindow {
                 };
             }
         }
-        
+
         // Cache miss or expired - calculate new window
         let window = Self::hourly(current_timestamp);
         let new_cache = CachedWindowBoundary::new(window.window_start, window.window_duration);
         env.storage().persistent().set(&cache_key, &new_cache);
-        
+
         window
     }
 
     /// Get daily window using cached boundary if available
     pub fn daily_cached(env: &Env, current_timestamp: u64) -> Self {
         let cache_key = symbol_short!("daily_c");
-        
+
         // Try to get cached boundary
-        if let Some(cached) = env.storage().persistent().get::<CachedWindowBoundary>(&cache_key) {
+        if let Some(cached) = env
+            .storage()
+            .persistent()
+            .get::<CachedWindowBoundary>(&cache_key)
+        {
             if cached.is_valid(current_timestamp) {
                 return TimeWindow {
                     window_start: cached.window_start,
@@ -161,12 +169,12 @@ impl TimeWindow {
                 };
             }
         }
-        
+
         // Cache miss or expired - calculate new window
         let window = Self::daily(current_timestamp);
         let new_cache = CachedWindowBoundary::new(window.window_start, window.window_duration);
         env.storage().persistent().set(&cache_key, &new_cache);
-        
+
         window
     }
 
@@ -366,12 +374,12 @@ mod tests {
     #[test]
     fn test_cached_window_boundary_validation() {
         let cache = CachedWindowBoundary::new(3600u64, 3600u64);
-        
+
         // Should be valid for timestamps within the window
         assert!(cache.is_valid(3600u64));
         assert!(cache.is_valid(5000u64));
         assert!(cache.is_valid(7199u64));
-        
+
         // Should be invalid at or after the next window boundary
         assert!(!cache.is_valid(7200u64));
         assert!(!cache.is_valid(8000u64));

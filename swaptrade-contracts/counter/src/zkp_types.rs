@@ -1,9 +1,8 @@
 /// Zero-Knowledge Proof Types for Private Transactions
-/// 
+///
 /// This module defines the core data structures and types used throughout
 /// the ZKP system for private transaction validation and verification.
-
-use soroban_sdk::{Bytes, contracttype};
+use soroban_sdk::{contracttype, Bytes};
 
 /// Represents a cryptographic commitment to a hidden value
 /// Used for committing to amounts, balances, or other sensitive data
@@ -198,7 +197,10 @@ mod tests {
 
     #[test]
     fn test_audit_event_type_values() {
-        assert_ne!(AuditEventType::ProofGenerated, AuditEventType::ProofVerified);
+        assert_ne!(
+            AuditEventType::ProofGenerated,
+            AuditEventType::ProofVerified
+        );
         assert_ne!(
             AuditEventType::ProofVerified,
             AuditEventType::TransactionExecuted

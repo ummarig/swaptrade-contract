@@ -1,7 +1,6 @@
 /// Zero-Knowledge Proof Specific Errors
 ///
 /// This module defines errors specific to ZKP operations
-
 use soroban_sdk::contracterror;
 
 #[contracterror]

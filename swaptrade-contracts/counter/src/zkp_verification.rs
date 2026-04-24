@@ -1,13 +1,12 @@
-/// Zero-Knowledge Proof Verification
-///
-/// This module provides on-chain proof verification functions for validating
-/// zero-knowledge proofs before executing private transactions.
-
-use soroban_sdk::{Env, Bytes, Address};
 use crate::zkp_types::{
     BalanceProof, CircuitParameters, PrivateTransaction, ProofScheme, ProofVerificationResult,
     RangeProof, ZKProof,
 };
+/// Zero-Knowledge Proof Verification
+///
+/// This module provides on-chain proof verification functions for validating
+/// zero-knowledge proofs before executing private transactions.
+use soroban_sdk::{Address, Bytes, Env};
 
 /// Main proof verifier for all ZKP operations
 pub struct ProofVerifier {
@@ -64,10 +63,7 @@ impl ProofVerifier {
     }
 
     /// Verify a complete transaction validity proof
-    pub fn verify_transaction_validity(
-        &self,
-        tx: &PrivateTransaction,
-    ) -> ProofVerificationResult {
+    pub fn verify_transaction_validity(&self, tx: &PrivateTransaction) -> ProofVerificationResult {
         // First, verify basic structure
         if tx.sender_hash.is_empty()
             || tx.receiver_hash.is_empty()
@@ -84,21 +80,14 @@ impl ProofVerifier {
 
         // Verify the main transaction validity proof
         match tx.validity_proof.scheme {
-            ProofScheme::Bulletproof => {
-                self.verify_bulletproof_transaction(&tx.validity_proof)
-            }
+            ProofScheme::Bulletproof => self.verify_bulletproof_transaction(&tx.validity_proof),
             ProofScheme::ZkSnark => self.verify_zksnark_transaction(&tx.validity_proof),
-            ProofScheme::SimplifiedProof => {
-                self.verify_simplified_transaction(&tx.validity_proof)
-            }
+            ProofScheme::SimplifiedProof => self.verify_simplified_transaction(&tx.validity_proof),
         }
     }
 
     /// Verify a Bulletproof transaction proof
-    fn verify_bulletproof_transaction(
-        &self,
-        _proof: &ZKProof,
-    ) -> ProofVerificationResult {
+    fn verify_bulletproof_transaction(&self, _proof: &ZKProof) -> ProofVerificationResult {
         // Verify Bulletproof structure
         if _proof.proof_data.is_empty() {
             return ProofVerificationResult::MalformedProof;
@@ -112,10 +101,7 @@ impl ProofVerifier {
     }
 
     /// Verify a zk-SNARK transaction proof
-    fn verify_zksnark_transaction(
-        &self,
-        _proof: &ZKProof,
-    ) -> ProofVerificationResult {
+    fn verify_zksnark_transaction(&self, _proof: &ZKProof) -> ProofVerificationResult {
         if _proof.proof_data.is_empty() {
             return ProofVerificationResult::MalformedProof;
         }
@@ -128,10 +114,7 @@ impl ProofVerifier {
     }
 
     /// Verify a simplified transaction proof
-    fn verify_simplified_transaction(
-        &self,
-        _proof: &ZKProof,
-    ) -> ProofVerificationResult {
+    fn verify_simplified_transaction(&self, _proof: &ZKProof) -> ProofVerificationResult {
         if _proof.proof_data.is_empty() {
             return ProofVerificationResult::MalformedProof;
         }
@@ -144,9 +127,7 @@ impl ProofVerifier {
     pub fn batch_verify_proofs(&self, proofs: &[ZKProof]) -> usize {
         proofs
             .iter()
-            .filter(|proof| {
-                self.verify_proof_structure(proof) == ProofVerificationResult::Valid
-            })
+            .filter(|proof| self.verify_proof_structure(proof) == ProofVerificationResult::Valid)
             .count()
     }
 
@@ -192,11 +173,7 @@ pub mod crypto_helpers {
     }
 
     /// Extract witness components with commitment opening
-    pub fn extract_witness(
-        _value: i128,
-        _blinding: &Bytes,
-        _nonce: &Bytes,
-    ) -> Bytes {
+    pub fn extract_witness(_value: i128, _blinding: &Bytes, _nonce: &Bytes) -> Bytes {
         // Combine value, blinding, and nonce for witness
         _blinding.clone()
     }
@@ -204,10 +181,10 @@ pub mod crypto_helpers {
 
 /// Proof verification middleware for contract calls
 pub mod middleware {
-    use soroban_sdk::{Env, Address, Bytes};
-    use crate::zkp_types::PrivateTransaction;
-    use super::ProofVerifier;
     use super::ProofVerificationResult;
+    use super::ProofVerifier;
+    use crate::zkp_types::PrivateTransaction;
+    use soroban_sdk::{Address, Bytes, Env};
 
     /// Guard function to ensure proof verification before transaction execution
     pub fn verify_before_execution(
@@ -228,17 +205,13 @@ pub mod middleware {
 
 /// State management for proof verification
 pub mod state {
-    use soroban_sdk::{Env, Bytes, Map, Symbol, symbol_short};
+    use soroban_sdk::{symbol_short, Bytes, Env, Map, Symbol};
 
     const PROOF_CACHE_KEY: Symbol = symbol_short!("prf_cache");
     const VERIFIED_PROOFS_KEY: Symbol = symbol_short!("vrfd_prf");
 
     /// Cache a proof's verification result
-    pub fn cache_proof_result(
-        env: &Env,
-        proof_id: &Bytes,
-        is_valid: bool,
-    ) {
+    pub fn cache_proof_result(env: &Env, proof_id: &Bytes, is_valid: bool) {
         // In production: store in contract state
         // cache_map.set(proof_id.clone(), is_valid);
     }
@@ -294,7 +267,7 @@ mod tests {
     fn test_crypto_helper_functions() {
         let blinding = Bytes::new(&soroban_sdk::Env::new());
         let proof = Bytes::new(&soroban_sdk::Env::new());
-        
+
         // These should not panic
         let _ = crypto_helpers::verify_hash_proof(100, &proof);
         let _ = crypto_helpers::verify_pedersen_commitment(100, &blinding, &proof);

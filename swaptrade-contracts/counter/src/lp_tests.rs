@@ -47,7 +47,7 @@ fn test_register_pool() {
 
     let btc = symbol_short!("BTC");
     let eth = symbol_short!("ETH");
-    
+
     let pool_id = client.register_pool(&admin, &btc, &eth, &1000, &2000, &30);
     assert_eq!(pool_id, 1);
 
@@ -67,12 +67,12 @@ fn test_pool_add_liquidity() {
 
     let usdt = symbol_short!("USDT");
     let dai = symbol_short!("DAI");
-    
+
     let pool_id = client.register_pool(&admin, &usdt, &dai, &1000, &1000, &5);
     let lp_tokens = client.pool_add_liquidity(&pool_id, &500, &500, &provider);
-    
+
     assert!(lp_tokens > 0);
-    
+
     let pool = client.get_pool(&pool_id).unwrap();
     assert_eq!(pool.reserve_a, 1500);
     assert_eq!(pool.reserve_b, 1500);
@@ -87,11 +87,11 @@ fn test_pool_swap() {
 
     let token_a = symbol_short!("TOKA");
     let token_b = symbol_short!("TOKB");
-    
+
     let pool_id = client.register_pool(&admin, &token_a, &token_b, &10000, &10000, &30);
-    
+
     let amount_out = client.pool_swap(&pool_id, &token_a, &100, &90);
-    
+
     assert!(amount_out >= 90);
     assert!(amount_out < 100);
 }
@@ -106,12 +106,12 @@ fn test_pool_remove_liquidity() {
 
     let token_a = symbol_short!("TOKA");
     let token_b = symbol_short!("TOKB");
-    
+
     let pool_id = client.register_pool(&admin, &token_a, &token_b, &1000, &2000, &30);
     let lp_tokens = client.pool_add_liquidity(&pool_id, &1000, &2000, &provider);
-    
+
     let (amount_a, amount_b) = client.pool_remove_liquidity(&pool_id, &lp_tokens / 2, &provider);
-    
+
     assert!(amount_a > 0);
     assert!(amount_b > 0);
 }
@@ -125,12 +125,12 @@ fn test_find_best_route_direct() {
 
     let xlm = symbol_short!("XLM");
     let usdc = symbol_short!("USDC");
-    
+
     client.register_pool(&admin, &xlm, &usdc, &10000, &10000, &30);
-    
+
     let route = client.find_best_route(&xlm, &usdc, &100);
     assert!(route.is_some());
-    
+
     let r = route.unwrap();
     assert_eq!(r.pools.len(), 1);
     assert_eq!(r.tokens.len(), 2);
@@ -147,13 +147,13 @@ fn test_find_best_route_multihop() {
     let xlm = symbol_short!("XLM");
     let usdc = symbol_short!("USDC");
     let btc = symbol_short!("BTC");
-    
+
     client.register_pool(&admin, &xlm, &usdc, &10000, &10000, &30);
     client.register_pool(&admin, &usdc, &btc, &10000, &5000, &30);
-    
+
     let route = client.find_best_route(&xlm, &btc, &100);
     assert!(route.is_some());
-    
+
     let r = route.unwrap();
     assert_eq!(r.pools.len(), 2);
     assert_eq!(r.tokens.len(), 3);
@@ -169,15 +169,29 @@ fn test_multiple_fee_tiers() {
 
     let token_a = symbol_short!("TOKA");
     let token_b = symbol_short!("TOKB");
-    
+
     let pool1 = client.register_pool(&admin, &token_a, &token_b, &10000, &10000, &1);
-    let pool2 = client.register_pool(&admin, &symbol_short!("TOKC"), &symbol_short!("TOKD"), &10000, &10000, &5);
-    let pool3 = client.register_pool(&admin, &symbol_short!("TOKE"), &symbol_short!("TOKF"), &10000, &10000, &30);
-    
+    let pool2 = client.register_pool(
+        &admin,
+        &symbol_short!("TOKC"),
+        &symbol_short!("TOKD"),
+        &10000,
+        &10000,
+        &5,
+    );
+    let pool3 = client.register_pool(
+        &admin,
+        &symbol_short!("TOKE"),
+        &symbol_short!("TOKF"),
+        &10000,
+        &10000,
+        &30,
+    );
+
     let p1 = client.get_pool(&pool1).unwrap();
     let p2 = client.get_pool(&pool2).unwrap();
     let p3 = client.get_pool(&pool3).unwrap();
-    
+
     assert_eq!(p1.fee_tier, 1);
     assert_eq!(p2.fee_tier, 5);
     assert_eq!(p3.fee_tier, 30);
@@ -193,10 +207,10 @@ fn test_pool_lp_balance() {
 
     let token_a = symbol_short!("TOKA");
     let token_b = symbol_short!("TOKB");
-    
+
     let pool_id = client.register_pool(&admin, &token_a, &token_b, &1000, &1000, &30);
     let lp_tokens = client.pool_add_liquidity(&pool_id, &500, &500, &provider);
-    
+
     let balance = client.get_pool_lp_balance(&pool_id, &provider);
     assert_eq!(balance, lp_tokens);
 }
@@ -211,6 +225,6 @@ fn test_invalid_fee_tier() {
 
     let token_a = symbol_short!("TOKA");
     let token_b = symbol_short!("TOKB");
-    
+
     client.register_pool(&admin, &token_a, &token_b, &1000, &1000, &100);
 }

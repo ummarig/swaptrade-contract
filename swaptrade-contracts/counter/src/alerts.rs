@@ -1,6 +1,4 @@
-use soroban_sdk::{
-    contracttype, symbol_short, Address, Env, Map, Symbol, Vec,
-};
+use soroban_sdk::{contracttype, symbol_short, Address, Env, Map, Symbol, Vec};
 
 // Data Types
 
@@ -239,7 +237,9 @@ pub fn check_price_alerts(env: &Env, token: &Symbol, current_price: i128) {
                 continue;
             }
 
-            if let AlertKind::Price(ref alert_token, target_price, ref direction) = alert.kind.clone() {
+            if let AlertKind::Price(ref alert_token, target_price, ref direction) =
+                alert.kind.clone()
+            {
                 if alert_token == token {
                     let fired = match direction {
                         PriceDirection::Above => current_price >= target_price,
@@ -277,9 +277,7 @@ pub fn check_portfolio_alerts(
 ) {
     let now = env.ledger().timestamp();
     let mut map = load_map(env);
-    let mut user_alerts: Vec<Alert> = map
-        .get(user.clone())
-        .unwrap_or_else(|| Vec::new(env));
+    let mut user_alerts: Vec<Alert> = map.get(user.clone()).unwrap_or_else(|| Vec::new(env));
     let mut changed = false;
 
     let len = user_alerts.len();
@@ -301,8 +299,8 @@ pub fn check_portfolio_alerts(
                     if reference_value == 0 {
                         false
                     } else {
-                        let change_bps = ((current_value - reference_value).abs() * 10_000)
-                            / reference_value;
+                        let change_bps =
+                            ((current_value - reference_value).abs() * 10_000) / reference_value;
                         change_bps >= threshold_bps
                     }
                 }
@@ -420,6 +418,10 @@ fn emit_alert_triggered(env: &Env, alert: &Alert, timestamp: u64) {
             alert.owner.clone(),
             alert.id,
         ),
-        (alert.kind.clone(), alert.notification_method.clone(), timestamp),
+        (
+            alert.kind.clone(),
+            alert.notification_method.clone(),
+            timestamp,
+        ),
     );
 }

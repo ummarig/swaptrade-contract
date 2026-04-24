@@ -5,8 +5,8 @@ use soroban_sdk::{symbol_short, testutils::Address as _, Address, Env, Vec};
 use crate::alerts::{
     check_market_alerts, check_portfolio_alerts, check_price_alerts, cleanup_alerts,
     create_market_alert, create_portfolio_alert, create_price_alert, get_active_alerts,
-    subscribe_alerts, MarketSignal, NotificationMethod, PortfolioTrigger, PriceDirection,
-    AlertKind,
+    subscribe_alerts, AlertKind, MarketSignal, NotificationMethod, PortfolioTrigger,
+    PriceDirection,
 };
 
 // helpers
@@ -16,7 +16,7 @@ fn setup() -> (Env, Address) {
     (env, user)
 }
 
-// create_price_alert 
+// create_price_alert
 
 #[test]
 fn test_create_price_alert_returns_incrementing_ids() {
@@ -73,8 +73,8 @@ fn test_create_portfolio_alert_stored_correctly() {
         &env,
         user.clone(),
         PortfolioTrigger::ValueChangeBps,
-        500,   // 5% change
-        0,     // no expiry
+        500, // 5% change
+        0,   // no expiry
         NotificationMethod::Event,
     );
 
@@ -82,7 +82,10 @@ fn test_create_portfolio_alert_stored_correctly() {
     let active = get_active_alerts(&env, user);
     assert_eq!(active.len(), 1);
     match active.get(0).unwrap().kind {
-        AlertKind::Portfolio { ref trigger_type, threshold_bps } => {
+        AlertKind::Portfolio {
+            ref trigger_type,
+            threshold_bps,
+        } => {
             assert!(matches!(trigger_type, PortfolioTrigger::ValueChangeBps));
             assert_eq!(threshold_bps, 500);
         }
@@ -153,7 +156,7 @@ fn test_expired_alert_not_returned_in_active_list() {
         symbol_short!("XLM"),
         1_000_000,
         PriceDirection::Above,
-        1000,   // expires in the past
+        1000, // expires in the past
         NotificationMethod::Event,
     );
 
@@ -181,7 +184,7 @@ fn test_persistent_alert_zero_expiry_never_expires() {
     assert_eq!(active.len(), 1, "persistent alert should always be active");
 }
 
-// check_price_alerts 
+// check_price_alerts
 
 #[test]
 fn test_price_alert_fires_above_threshold() {
@@ -249,7 +252,11 @@ fn test_price_alert_below_direction() {
     check_price_alerts(&env, &symbol_short!("XLM"), 100_000); // below target
 
     let active = get_active_alerts(&env, user);
-    assert_eq!(active.len(), 0, "below-direction alert should fire and deactivate");
+    assert_eq!(
+        active.len(),
+        0,
+        "below-direction alert should fire and deactivate"
+    );
 }
 
 #[test]
@@ -272,10 +279,14 @@ fn test_persistent_price_alert_stays_active_after_trigger() {
     check_price_alerts(&env, &symbol_short!("XLM"), 600_000);
 
     let active = get_active_alerts(&env, user);
-    assert_eq!(active.len(), 1, "persistent alert must remain active after firing");
+    assert_eq!(
+        active.len(),
+        1,
+        "persistent alert must remain active after firing"
+    );
 }
 
-// check_portfolio_alerts 
+// check_portfolio_alerts
 
 #[test]
 fn test_portfolio_value_change_alert_fires() {
@@ -321,7 +332,7 @@ fn test_portfolio_liquidation_alert_fires() {
     assert_eq!(active.len(), 0);
 }
 
-// check_market_alerts 
+// check_market_alerts
 #[test]
 fn test_market_alert_fires_on_matching_signal() {
     let env = Env::default();
@@ -337,7 +348,11 @@ fn test_market_alert_fires_on_matching_signal() {
         NotificationMethod::Event,
     );
 
-    check_market_alerts(&env, &symbol_short!("XLMUSDC"), &MarketSignal::VolatilitySpike);
+    check_market_alerts(
+        &env,
+        &symbol_short!("XLMUSDC"),
+        &MarketSignal::VolatilitySpike,
+    );
 
     let active = get_active_alerts(&env, user);
     assert_eq!(active.len(), 0);
@@ -358,13 +373,17 @@ fn test_market_alert_does_not_fire_for_different_signal() {
         NotificationMethod::Event,
     );
 
-    check_market_alerts(&env, &symbol_short!("XLMUSDC"), &MarketSignal::VolatilitySpike);
+    check_market_alerts(
+        &env,
+        &symbol_short!("XLMUSDC"),
+        &MarketSignal::VolatilitySpike,
+    );
 
     let active = get_active_alerts(&env, user);
     assert_eq!(active.len(), 1, "alert for different signal must not fire");
 }
 
-// cleanup_alerts 
+// cleanup_alerts
 
 #[test]
 fn test_cleanup_removes_expired_alerts() {

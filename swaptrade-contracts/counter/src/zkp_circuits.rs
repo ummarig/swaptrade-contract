@@ -1,10 +1,9 @@
+use crate::zkp_types::{CircuitParameters, ProofScheme, RangeProof, ZKProof};
 /// Zero-Knowledge Proof Circuits
 ///
 /// This module defines and implements various cryptographic circuits
 /// used for generating and verifying zero-knowledge proofs in private transactions.
-
 use soroban_sdk::{Bytes, Env};
-use crate::zkp_types::{CircuitParameters, ProofScheme, RangeProof, ZKProof};
 
 /// Represents a cryptographic circuit for proof generation/verification
 pub trait Circuit {
@@ -28,11 +27,7 @@ impl PedersenCommitmentCircuit {
 
     /// Verify a Pedersen commitment
     /// In production, this would use actual elliptic curve operations
-    pub fn verify_commitment(
-        _value: i128,
-        _blinding_factor: &Bytes,
-        _commitment: &Bytes,
-    ) -> bool {
+    pub fn verify_commitment(_value: i128, _blinding_factor: &Bytes, _commitment: &Bytes) -> bool {
         // Placeholder for actual Pedersen commitment verification
         // Real implementation would:
         // 1. Compute hash(value * G + blinding * H)
@@ -196,21 +191,14 @@ pub struct SimplifiedProofCircuit;
 
 impl SimplifiedProofCircuit {
     /// Generate a simplified hash-based proof
-    pub fn generate_simplified_proof(
-        _value: i128,
-        _salt: &Bytes,
-    ) -> Bytes {
+    pub fn generate_simplified_proof(_value: i128, _salt: &Bytes) -> Bytes {
         // Simple proof: hash(value || salt)
         // In production: would use single attribute hash
         Bytes::new(&soroban_sdk::Env::new())
     }
 
     /// Verify a simplified proof
-    pub fn verify_simplified_proof(
-        _value: i128,
-        _salt: &Bytes,
-        _proof: &Bytes,
-    ) -> bool {
+    pub fn verify_simplified_proof(_value: i128, _salt: &Bytes, _proof: &Bytes) -> bool {
         // In production: recompute hash and compare
         !_proof.is_empty()
     }
@@ -232,10 +220,10 @@ pub struct Constraint {
 /// Types of constraints
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ConstraintType {
-    LinearEqual,     // a * x + b * y = c
-    Multiplication,  // x * y = z
-    Range,           // 0 <= x < 2^n
-    Commitment,      // verify commitment opening
+    LinearEqual,    // a * x + b * y = c
+    Multiplication, // x * y = z
+    Range,          // 0 <= x < 2^n
+    Commitment,     // verify commitment opening
 }
 
 impl ConstraintSystem {
